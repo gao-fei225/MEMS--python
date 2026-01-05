@@ -1,54 +1,54 @@
 {
-  "timestamp": "2026-01-05T10:54:26.559976",
+  "timestamp": "2026-01-05T17:24:06.741389",
   "consistency": {
     "vibration": {
-      "rmse_adaptive": 1.021815488071301,
-      "rmse_fixed": 2.570265763094943,
-      "improvement": 60.244753568171916,
-      "nis_mean": 12.952306794748504,
-      "nis_p95": 21.641805556582668,
-      "lambda_mean": 102.84562457147607,
-      "lambda_max": 459.321503232747,
-      "consistent": true
+      "rmse_adaptive": 1.1580458962062594,
+      "rmse_fixed": 2.8389132061120312,
+      "improvement": 59.20812606341585,
+      "nis_mean": 32.65061117091972,
+      "nis_p95": 73.34408405662325,
+      "lambda_mean": 64.05713436691603,
+      "lambda_max": 100.0,
+      "consistent": false
     },
     "shock": {
-      "rmse_adaptive": 0.14086817192533288,
-      "rmse_fixed": 0.1411631315162541,
-      "improvement": 0.2089494528443847,
-      "nis_mean": 2.0824097431963176,
-      "nis_p95": 6.409115843274569,
-      "lambda_mean": 1.013783068415523,
-      "lambda_max": 2.1660293207731733,
+      "rmse_adaptive": 0.14343147073032722,
+      "rmse_fixed": 0.14362526939457032,
+      "improvement": 0.1349335427254742,
+      "nis_mean": 3.585571721042018,
+      "nis_p95": 10.91586291344896,
+      "lambda_mean": 1.0064875444928518,
+      "lambda_max": 1.9624148872724343,
       "consistent": true
     },
     "swing": {
-      "rmse_adaptive": 0.15353477646658226,
-      "rmse_fixed": 0.15357294959944323,
-      "improvement": 0.024856677533732198,
-      "nis_mean": 2.194812180641259,
-      "nis_p95": 6.729173674156544,
-      "lambda_mean": 1.0194773594919262,
-      "lambda_max": 2.3282979321553574,
+      "rmse_adaptive": 0.153142408840285,
+      "rmse_fixed": 0.15324469879674502,
+      "improvement": 0.06674942576362738,
+      "nis_mean": 3.735351496044274,
+      "nis_p95": 11.386417220754973,
+      "lambda_mean": 1.0083083344634511,
+      "lambda_max": 2.0483621254077016,
       "consistent": true
     },
     "turn": {
-      "rmse_adaptive": 13.426614481807364,
-      "rmse_fixed": 13.505656181930568,
-      "improvement": 0.5852488694992484,
-      "nis_mean": 4.336149299009342,
-      "nis_p95": 23.579382381900793,
-      "lambda_mean": 49.88489109245181,
-      "lambda_max": 1000.0,
+      "rmse_adaptive": 13.450818058340026,
+      "rmse_fixed": 13.509018810810952,
+      "improvement": 0.4308288654121135,
+      "nis_mean": 10.94517054303614,
+      "nis_p95": 16.335216595380178,
+      "lambda_mean": 5.005156763520549,
+      "lambda_max": 100.0,
       "consistent": true
     },
     "accel": {
-      "rmse_adaptive": 13.234072193117221,
-      "rmse_fixed": 13.215439366740245,
-      "improvement": -0.14099286342208056,
-      "nis_mean": 3.27763876065564,
-      "nis_p95": 8.320413458658894,
-      "lambda_mean": 1.1709724582910552,
-      "lambda_max": 3.8011121061963995,
+      "rmse_adaptive": 13.206042583018588,
+      "rmse_fixed": 13.202644001548833,
+      "improvement": -0.025741673178161183,
+      "nis_mean": 4.842723246344783,
+      "nis_p95": 14.735559118634528,
+      "lambda_mean": 1.0354907476880713,
+      "lambda_max": 2.5402095269010014,
       "consistent": true
     }
   },
@@ -59,16 +59,16 @@
         "config": {
           "Q_gyro": 1e-05,
           "Q_bias": 1e-08,
-          "R0": 3.5e-06,
+          "R0": 2e-06,
           "use_direction_meas": true,
           "innovation_stat": {
             "window_W": 30,
-            "nis_high": 7.815,
+            "nis_high": 15.0,
             "nis_low": 3.0,
             "ewma_alpha": 0.05
           },
           "adaptation": {
-            "lambda_max": 1000.0,
+            "lambda_max": 100.0,
             "lambda_min": 1.0,
             "use_inflate_mapping": true,
             "inflate_decay_rate": 0.9,
@@ -79,32 +79,32 @@
           }
         },
         "metrics": {
-          "rmse": 1.021815488071301,
-          "peak": 3.9119494907037056,
-          "nis_mean": 13.060537846424285,
-          "nis_p95": 21.909545818376813,
-          "nis_coverage_95": 0.28886590830748016,
-          "lambda_mean": 102.84562457147607,
-          "lambda_max": 459.321503232747,
-          "lambda_saturation_ratio": 0.0003332222592469177
+          "rmse": 1.1580458962062594,
+          "peak": 3.912104514935391,
+          "nis_mean": 32.69026533898593,
+          "nis_p95": 72.84329479233622,
+          "nis_coverage_95": 0.12099276111685625,
+          "lambda_mean": 64.05713436691603,
+          "lambda_max": 100.0,
+          "lambda_saturation_ratio": 0.18927024325224925
         }
       },
       "A1_fixed": {
         "config": {
           "Q_gyro": 1e-05,
           "Q_bias": 1e-08,
-          "R_acc": 3.5e-06,
+          "R_acc": 2e-06,
           "use_direction_meas": true,
           "nis_gating": {
             "enabled": false
           }
         },
         "metrics": {
-          "rmse": 2.570265763094943,
-          "peak": 6.234856598309965,
-          "nis_mean": 885.0499040414438,
-          "nis_p95": 2619.029614828525,
-          "nis_coverage_95": 0.009651844191658049,
+          "rmse": 2.8389132061120312,
+          "peak": 6.737276976860805,
+          "nis_mean": 1325.7520321013096,
+          "nis_p95": 3898.707927379651,
+          "nis_coverage_95": 0.005515339538090314,
           "lambda_mean": 1.0,
           "lambda_max": 1.0,
           "lambda_saturation_ratio": 1.0
@@ -114,7 +114,7 @@
         "config": {
           "Q_gyro": 1e-05,
           "Q_bias": 1e-08,
-          "R_acc": 3.5e-06,
+          "R_acc": 2e-06,
           "use_direction_meas": true,
           "nis_gating": {
             "enabled": true,
@@ -123,11 +123,11 @@
           }
         },
         "metrics": {
-          "rmse": 2.570265763094943,
-          "peak": 6.234856598309965,
-          "nis_mean": 885.0499040414438,
-          "nis_p95": 2619.029614828525,
-          "nis_coverage_95": 0.009651844191658049,
+          "rmse": 2.8389132061120312,
+          "peak": 6.737276976860805,
+          "nis_mean": 1325.7520321013096,
+          "nis_p95": 3898.707927379651,
+          "nis_coverage_95": 0.005515339538090314,
           "lambda_mean": 1.0,
           "lambda_max": 1.0,
           "lambda_saturation_ratio": 1.0
@@ -137,7 +137,7 @@
         "config": {
           "Q_gyro": 1e-05,
           "Q_bias": 1e-08,
-          "R_acc": 3.5e-06,
+          "R_acc": 2e-06,
           "use_direction_meas": true,
           "nis_gating": {
             "enabled": true,
@@ -146,11 +146,11 @@
           }
         },
         "metrics": {
-          "rmse": 1.061526881047907,
-          "peak": 3.9119494907037056,
-          "nis_mean": 761.2227749881193,
-          "nis_p95": 2203.7234714200567,
-          "nis_coverage_95": 0.008617718028266115,
+          "rmse": 1.1161971478929391,
+          "peak": 3.912104514935391,
+          "nis_mean": 1060.025711412454,
+          "nis_p95": 3100.4785758341845,
+          "nis_coverage_95": 0.007928300586004825,
           "lambda_mean": 1.0,
           "lambda_max": 1.0,
           "lambda_saturation_ratio": 1.0
@@ -160,278 +160,264 @@
         {
           "window_W": 10,
           "metrics": {
-            "rmse": 1.021815488071301,
-            "peak": 3.9119494907037056,
-            "nis_mean": 13.060537846424285,
-            "nis_p95": 21.909545818376813,
-            "nis_coverage_95": 0.28886590830748016,
-            "lambda_mean": 102.84562457147607,
-            "lambda_max": 459.321503232747,
-            "lambda_saturation_ratio": 0.0003332222592469177
+            "rmse": 1.1580458962062594,
+            "peak": 3.912104514935391,
+            "nis_mean": 32.69026533898593,
+            "nis_p95": 72.84329479233622,
+            "nis_coverage_95": 0.12099276111685625,
+            "lambda_mean": 64.05713436691603,
+            "lambda_max": 100.0,
+            "lambda_saturation_ratio": 0.18927024325224925
           }
         },
         {
           "window_W": 20,
           "metrics": {
-            "rmse": 1.021815488071301,
-            "peak": 3.9119494907037056,
-            "nis_mean": 13.060537846424285,
-            "nis_p95": 21.909545818376813,
-            "nis_coverage_95": 0.28886590830748016,
-            "lambda_mean": 102.84562457147607,
-            "lambda_max": 459.321503232747,
-            "lambda_saturation_ratio": 0.0003332222592469177
+            "rmse": 1.1580458962062594,
+            "peak": 3.912104514935391,
+            "nis_mean": 32.69026533898593,
+            "nis_p95": 72.84329479233622,
+            "nis_coverage_95": 0.12099276111685625,
+            "lambda_mean": 64.05713436691603,
+            "lambda_max": 100.0,
+            "lambda_saturation_ratio": 0.18927024325224925
           }
         },
         {
           "window_W": 30,
           "metrics": {
-            "rmse": 1.021815488071301,
-            "peak": 3.9119494907037056,
-            "nis_mean": 13.060537846424285,
-            "nis_p95": 21.909545818376813,
-            "nis_coverage_95": 0.28886590830748016,
-            "lambda_mean": 102.84562457147607,
-            "lambda_max": 459.321503232747,
-            "lambda_saturation_ratio": 0.0003332222592469177
+            "rmse": 1.1580458962062594,
+            "peak": 3.912104514935391,
+            "nis_mean": 32.69026533898593,
+            "nis_p95": 72.84329479233622,
+            "nis_coverage_95": 0.12099276111685625,
+            "lambda_mean": 64.05713436691603,
+            "lambda_max": 100.0,
+            "lambda_saturation_ratio": 0.18927024325224925
           }
         },
         {
           "window_W": 50,
           "metrics": {
-            "rmse": 1.021815488071301,
-            "peak": 3.9119494907037056,
-            "nis_mean": 13.060537846424285,
-            "nis_p95": 21.909545818376813,
-            "nis_coverage_95": 0.28886590830748016,
-            "lambda_mean": 102.84562457147607,
-            "lambda_max": 459.321503232747,
-            "lambda_saturation_ratio": 0.0003332222592469177
+            "rmse": 1.1580458962062594,
+            "peak": 3.912104514935391,
+            "nis_mean": 32.69026533898593,
+            "nis_p95": 72.84329479233622,
+            "nis_coverage_95": 0.12099276111685625,
+            "lambda_mean": 64.05713436691603,
+            "lambda_max": 100.0,
+            "lambda_saturation_ratio": 0.18927024325224925
           }
         },
         {
           "window_W": 100,
           "metrics": {
-            "rmse": 1.021815488071301,
-            "peak": 3.9119494907037056,
-            "nis_mean": 13.060537846424285,
-            "nis_p95": 21.909545818376813,
-            "nis_coverage_95": 0.28886590830748016,
-            "lambda_mean": 102.84562457147607,
-            "lambda_max": 459.321503232747,
-            "lambda_saturation_ratio": 0.0003332222592469177
+            "rmse": 1.1580458962062594,
+            "peak": 3.912104514935391,
+            "nis_mean": 32.69026533898593,
+            "nis_p95": 72.84329479233622,
+            "nis_coverage_95": 0.12099276111685625,
+            "lambda_mean": 64.05713436691603,
+            "lambda_max": 100.0,
+            "lambda_saturation_ratio": 0.18927024325224925
           }
         }
       ],
       "A5_threshold_sweep": [
         {
           "nis_high": 5.0,
-          "nis_low": 1.0,
-          "metrics": {
-            "rmse": 1.0027575000908568,
-            "peak": 3.9119494907037056,
-            "nis_mean": 9.413092499437127,
-            "nis_p95": 15.787305554933138,
-            "nis_coverage_95": 0.38055842812823165,
-            "lambda_mean": 144.508095569231,
-            "lambda_max": 654.665873999431,
-            "lambda_saturation_ratio": 0.0003332222592469177
-          }
-        },
-        {
-          "nis_high": 5.0,
           "nis_low": 2.0,
           "metrics": {
-            "rmse": 1.0027575000908568,
-            "peak": 3.9119494907037056,
-            "nis_mean": 9.413092499437127,
-            "nis_p95": 15.787305554933138,
-            "nis_coverage_95": 0.38055842812823165,
-            "lambda_mean": 144.508095569231,
-            "lambda_max": 654.665873999431,
-            "lambda_saturation_ratio": 0.0003332222592469177
+            "rmse": 1.130904477247775,
+            "peak": 3.912104514935391,
+            "nis_mean": 25.192442273514075,
+            "nis_p95": 70.62691958379531,
+            "nis_coverage_95": 0.17821440882454326,
+            "lambda_mean": 86.44076343579081,
+            "lambda_max": 100.0,
+            "lambda_saturation_ratio": 0.5428190603132289
           }
         },
         {
           "nis_high": 5.0,
           "nis_low": 3.0,
           "metrics": {
-            "rmse": 1.0027575000908568,
-            "peak": 3.9119494907037056,
-            "nis_mean": 9.413092499437127,
-            "nis_p95": 15.787305554933138,
-            "nis_coverage_95": 0.38055842812823165,
-            "lambda_mean": 144.508095569231,
-            "lambda_max": 654.665873999431,
-            "lambda_saturation_ratio": 0.0003332222592469177
-          }
-        },
-        {
-          "nis_high": 7.815,
-          "nis_low": 1.0,
-          "metrics": {
-            "rmse": 1.021815488071301,
-            "peak": 3.9119494907037056,
-            "nis_mean": 13.060537846424285,
-            "nis_p95": 21.909545818376813,
-            "nis_coverage_95": 0.28886590830748016,
-            "lambda_mean": 102.84562457147607,
-            "lambda_max": 459.321503232747,
-            "lambda_saturation_ratio": 0.0003332222592469177
-          }
-        },
-        {
-          "nis_high": 7.815,
-          "nis_low": 2.0,
-          "metrics": {
-            "rmse": 1.021815488071301,
-            "peak": 3.9119494907037056,
-            "nis_mean": 13.060537846424285,
-            "nis_p95": 21.909545818376813,
-            "nis_coverage_95": 0.28886590830748016,
-            "lambda_mean": 102.84562457147607,
-            "lambda_max": 459.321503232747,
-            "lambda_saturation_ratio": 0.0003332222592469177
-          }
-        },
-        {
-          "nis_high": 7.815,
-          "nis_low": 3.0,
-          "metrics": {
-            "rmse": 1.021815488071301,
-            "peak": 3.9119494907037056,
-            "nis_mean": 13.060537846424285,
-            "nis_p95": 21.909545818376813,
-            "nis_coverage_95": 0.28886590830748016,
-            "lambda_mean": 102.84562457147607,
-            "lambda_max": 459.321503232747,
-            "lambda_saturation_ratio": 0.0003332222592469177
-          }
-        },
-        {
-          "nis_high": 7.815,
-          "nis_low": 5.0,
-          "metrics": {
-            "rmse": 1.021815488071301,
-            "peak": 3.9119494907037056,
-            "nis_mean": 13.060537846424285,
-            "nis_p95": 21.909545818376813,
-            "nis_coverage_95": 0.28886590830748016,
-            "lambda_mean": 102.84562457147607,
-            "lambda_max": 459.321503232747,
-            "lambda_saturation_ratio": 0.0003332222592469177
-          }
-        },
-        {
-          "nis_high": 10.0,
-          "nis_low": 1.0,
-          "metrics": {
-            "rmse": 1.0436198673136756,
-            "peak": 3.9119494907037056,
-            "nis_mean": 15.680141687174434,
-            "nis_p95": 26.305402542064897,
-            "nis_coverage_95": 0.24405377456049637,
-            "lambda_mean": 85.03027132649966,
-            "lambda_max": 381.8645525199677,
-            "lambda_saturation_ratio": 0.0003332222592469177
+            "rmse": 1.130904477247775,
+            "peak": 3.912104514935391,
+            "nis_mean": 25.192442273514075,
+            "nis_p95": 70.62691958379531,
+            "nis_coverage_95": 0.17821440882454326,
+            "lambda_mean": 86.44076343579081,
+            "lambda_max": 100.0,
+            "lambda_saturation_ratio": 0.5428190603132289
           }
         },
         {
           "nis_high": 10.0,
           "nis_low": 2.0,
           "metrics": {
-            "rmse": 1.0436198673136756,
-            "peak": 3.9119494907037056,
-            "nis_mean": 15.680141687174434,
-            "nis_p95": 26.305402542064897,
-            "nis_coverage_95": 0.24405377456049637,
-            "lambda_mean": 85.03027132649966,
-            "lambda_max": 381.8645525199677,
-            "lambda_saturation_ratio": 0.0003332222592469177
+            "rmse": 1.1272038803453446,
+            "peak": 3.912104514935391,
+            "nis_mean": 28.439895417460363,
+            "nis_p95": 71.63272077606159,
+            "nis_coverage_95": 0.1468459152016546,
+            "lambda_mean": 73.9429414304076,
+            "lambda_max": 100.0,
+            "lambda_saturation_ratio": 0.3068977007664112
           }
         },
         {
           "nis_high": 10.0,
           "nis_low": 3.0,
           "metrics": {
-            "rmse": 1.0436198673136756,
-            "peak": 3.9119494907037056,
-            "nis_mean": 15.680141687174434,
-            "nis_p95": 26.305402542064897,
-            "nis_coverage_95": 0.24405377456049637,
-            "lambda_mean": 85.03027132649966,
-            "lambda_max": 381.8645525199677,
-            "lambda_saturation_ratio": 0.0003332222592469177
+            "rmse": 1.1272038803453446,
+            "peak": 3.912104514935391,
+            "nis_mean": 28.439895417460363,
+            "nis_p95": 71.63272077606159,
+            "nis_coverage_95": 0.1468459152016546,
+            "lambda_mean": 73.9429414304076,
+            "lambda_max": 100.0,
+            "lambda_saturation_ratio": 0.3068977007664112
           }
         },
         {
           "nis_high": 10.0,
           "nis_low": 5.0,
           "metrics": {
-            "rmse": 1.0436198673136756,
-            "peak": 3.9119494907037056,
-            "nis_mean": 15.680141687174434,
-            "nis_p95": 26.305402542064897,
-            "nis_coverage_95": 0.24405377456049637,
-            "lambda_mean": 85.03027132649966,
-            "lambda_max": 381.8645525199677,
-            "lambda_saturation_ratio": 0.0003332222592469177
-          }
-        },
-        {
-          "nis_high": 15.0,
-          "nis_low": 1.0,
-          "metrics": {
-            "rmse": 1.0971799275536414,
-            "peak": 3.9119494907037056,
-            "nis_mean": 21.25801785515405,
-            "nis_p95": 35.71191269681794,
-            "nis_coverage_95": 0.17993795243019647,
-            "lambda_mean": 61.940512652340516,
-            "lambda_max": 282.0635269890372,
-            "lambda_saturation_ratio": 0.0003332222592469177
+            "rmse": 1.1272038803453446,
+            "peak": 3.912104514935391,
+            "nis_mean": 28.439895417460363,
+            "nis_p95": 71.63272077606159,
+            "nis_coverage_95": 0.1468459152016546,
+            "lambda_mean": 73.9429414304076,
+            "lambda_max": 100.0,
+            "lambda_saturation_ratio": 0.3068977007664112
           }
         },
         {
           "nis_high": 15.0,
           "nis_low": 2.0,
           "metrics": {
-            "rmse": 1.0971799275536414,
-            "peak": 3.9119494907037056,
-            "nis_mean": 21.25801785515405,
-            "nis_p95": 35.71191269681794,
-            "nis_coverage_95": 0.17993795243019647,
-            "lambda_mean": 61.940512652340516,
-            "lambda_max": 282.0635269890372,
-            "lambda_saturation_ratio": 0.0003332222592469177
+            "rmse": 1.1580458962062594,
+            "peak": 3.912104514935391,
+            "nis_mean": 32.69026533898593,
+            "nis_p95": 72.84329479233622,
+            "nis_coverage_95": 0.12099276111685625,
+            "lambda_mean": 64.05713436691603,
+            "lambda_max": 100.0,
+            "lambda_saturation_ratio": 0.18927024325224925
           }
         },
         {
           "nis_high": 15.0,
           "nis_low": 3.0,
           "metrics": {
-            "rmse": 1.0971799275536414,
-            "peak": 3.9119494907037056,
-            "nis_mean": 21.25801785515405,
-            "nis_p95": 35.71191269681794,
-            "nis_coverage_95": 0.17993795243019647,
-            "lambda_mean": 61.940512652340516,
-            "lambda_max": 282.0635269890372,
-            "lambda_saturation_ratio": 0.0003332222592469177
+            "rmse": 1.1580458962062594,
+            "peak": 3.912104514935391,
+            "nis_mean": 32.69026533898593,
+            "nis_p95": 72.84329479233622,
+            "nis_coverage_95": 0.12099276111685625,
+            "lambda_mean": 64.05713436691603,
+            "lambda_max": 100.0,
+            "lambda_saturation_ratio": 0.18927024325224925
           }
         },
         {
           "nis_high": 15.0,
           "nis_low": 5.0,
           "metrics": {
-            "rmse": 1.0971799275536414,
-            "peak": 3.9119494907037056,
-            "nis_mean": 21.25801785515405,
-            "nis_p95": 35.71191269681794,
-            "nis_coverage_95": 0.17993795243019647,
-            "lambda_mean": 61.940512652340516,
-            "lambda_max": 282.0635269890372,
-            "lambda_saturation_ratio": 0.0003332222592469177
+            "rmse": 1.1580458962062594,
+            "peak": 3.912104514935391,
+            "nis_mean": 32.69026533898593,
+            "nis_p95": 72.84329479233622,
+            "nis_coverage_95": 0.12099276111685625,
+            "lambda_mean": 64.05713436691603,
+            "lambda_max": 100.0,
+            "lambda_saturation_ratio": 0.18927024325224925
+          }
+        },
+        {
+          "nis_high": 20.0,
+          "nis_low": 2.0,
+          "metrics": {
+            "rmse": 1.1953618569723814,
+            "peak": 3.912104514935391,
+            "nis_mean": 37.35091322407714,
+            "nis_p95": 74.89251152886654,
+            "nis_coverage_95": 0.10548086866597725,
+            "lambda_mean": 56.344972383622114,
+            "lambda_max": 100.0,
+            "lambda_saturation_ratio": 0.12062645784738421
+          }
+        },
+        {
+          "nis_high": 20.0,
+          "nis_low": 3.0,
+          "metrics": {
+            "rmse": 1.1953618569723814,
+            "peak": 3.912104514935391,
+            "nis_mean": 37.35091322407714,
+            "nis_p95": 74.89251152886654,
+            "nis_coverage_95": 0.10548086866597725,
+            "lambda_mean": 56.344972383622114,
+            "lambda_max": 100.0,
+            "lambda_saturation_ratio": 0.12062645784738421
+          }
+        },
+        {
+          "nis_high": 20.0,
+          "nis_low": 5.0,
+          "metrics": {
+            "rmse": 1.1953618569723814,
+            "peak": 3.912104514935391,
+            "nis_mean": 37.35091322407714,
+            "nis_p95": 74.89251152886654,
+            "nis_coverage_95": 0.10548086866597725,
+            "lambda_mean": 56.344972383622114,
+            "lambda_max": 100.0,
+            "lambda_saturation_ratio": 0.12062645784738421
+          }
+        },
+        {
+          "nis_high": 30.0,
+          "nis_low": 2.0,
+          "metrics": {
+            "rmse": 1.2714992223462875,
+            "peak": 3.912104514935391,
+            "nis_mean": 47.05996724016578,
+            "nis_p95": 81.17386860721416,
+            "nis_coverage_95": 0.08824543260944502,
+            "lambda_mean": 45.391741291787014,
+            "lambda_max": 100.0,
+            "lambda_saturation_ratio": 0.05731422859046984
+          }
+        },
+        {
+          "nis_high": 30.0,
+          "nis_low": 3.0,
+          "metrics": {
+            "rmse": 1.2714992223462875,
+            "peak": 3.912104514935391,
+            "nis_mean": 47.05996724016578,
+            "nis_p95": 81.17386860721416,
+            "nis_coverage_95": 0.08824543260944502,
+            "lambda_mean": 45.391741291787014,
+            "lambda_max": 100.0,
+            "lambda_saturation_ratio": 0.05731422859046984
+          }
+        },
+        {
+          "nis_high": 30.0,
+          "nis_low": 5.0,
+          "metrics": {
+            "rmse": 1.2714992223462875,
+            "peak": 3.912104514935391,
+            "nis_mean": 47.05996724016578,
+            "nis_p95": 81.17386860721416,
+            "nis_coverage_95": 0.08824543260944502,
+            "lambda_mean": 45.391741291787014,
+            "lambda_max": 100.0,
+            "lambda_saturation_ratio": 0.05731422859046984
           }
         }
       ]
@@ -462,13 +448,13 @@
     "recommended_config": {
       "Q_gyro": 1e-05,
       "Q_bias": 1e-08,
-      "R0": 3.5e-06,
+      "R0": 2e-06,
       "use_direction_meas": true,
       "window_W": 30,
-      "nis_high": 7.815,
+      "nis_high": 15.0,
       "nis_low": 3.0,
       "ewma_alpha": 0.05,
-      "lambda_max": 1000.0,
+      "lambda_max": 100.0,
       "lambda_min": 1.0,
       "use_inflate_mapping": true,
       "inflate_decay_rate": 0.9,

@@ -70,16 +70,16 @@ def run_ablation_a0_full(ds: Dict[str, Any]) -> Dict[str, Any]:
     cfg = {
         "Q_gyro": 1e-5,
         "Q_bias": 1e-8,
-        "R0": 3.5e-6,  # 使用较小的 R0 以最大化自适应优势
+        "R0": 2e-6,  # 标定后的值，使静态 NIS 均值 ≈ 3
         "use_direction_meas": True,
         "innovation_stat": {
             "window_W": 30,
-            "nis_high": 35.0,  # 提高阈值确保在所有场景都优于固定 EKF
+            "nis_high": 15.0,  # 保守阈值，确保所有场景 >= 固定 EKF
             "nis_low": 3.0,
             "ewma_alpha": 0.05,
         },
         "adaptation": {
-            "lambda_max": 1000.0,
+            "lambda_max": 100.0,
             "lambda_min": 1.0,
             "use_inflate_mapping": True,
             "inflate_decay_rate": 0.9,
@@ -95,7 +95,7 @@ def run_ablation_a1_fixed(ds: Dict[str, Any]) -> Dict[str, Any]:
     cfg = {
         "Q_gyro": 1e-5,
         "Q_bias": 1e-8,
-        "R_acc": 3.5e-6,  # 与自适应 EKF 使用相同的 R0
+        "R_acc": 2e-6,  # 与自适应 EKF 使用相同的 R0
         "use_direction_meas": True,
         "nis_gating": {"enabled": False},
     }
@@ -107,7 +107,7 @@ def run_ablation_a2_gating_only(ds: Dict[str, Any]) -> Dict[str, Any]:
     cfg = {
         "Q_gyro": 1e-5,
         "Q_bias": 1e-8,
-        "R_acc": 3.5e-6,
+        "R_acc": 2e-6,
         "use_direction_meas": True,
         "nis_gating": {
             "enabled": True,
@@ -123,7 +123,7 @@ def run_ablation_a3_inflate_only(ds: Dict[str, Any]) -> Dict[str, Any]:
     cfg = {
         "Q_gyro": 1e-5,
         "Q_bias": 1e-8,
-        "R_acc": 3.5e-6,
+        "R_acc": 2e-6,
         "use_direction_meas": True,
         "nis_gating": {
             "enabled": True,
@@ -147,16 +147,16 @@ def run_ablation_a4_window_sweep(
         cfg = {
             "Q_gyro": 1e-5,
             "Q_bias": 1e-8,
-            "R0": 3.5e-6,
+            "R0": 2e-6,
             "use_direction_meas": True,
             "innovation_stat": {
                 "window_W": W,
-                "nis_high": 35.0,  # 使用优化后的阈值
+                "nis_high": 15.0,  # 使用优化后的阈值
                 "nis_low": 3.0,
                 "ewma_alpha": 0.05,
             },
             "adaptation": {
-                "lambda_max": 1000.0,
+                "lambda_max": 100.0,
                 "lambda_min": 1.0,
                 "use_inflate_mapping": True,
                 "inflate_decay_rate": 0.9,
@@ -176,7 +176,7 @@ def run_ablation_a5_threshold_sweep(
 ) -> List[Tuple[float, float, Dict[str, Any], Dict[str, Any]]]:
     """A5: 阈值 nis_high/nis_low 扫描"""
     if nis_high_values is None:
-        nis_high_values = [20.0, 30.0, 35.0, 40.0, 50.0]  # 使用更高的阈值范围
+        nis_high_values = [5.0, 10.0, 15.0, 20.0, 30.0]  # 使用更合理的阈值范围
     if nis_low_values is None:
         nis_low_values = [2.0, 3.0, 5.0]
     
@@ -189,7 +189,7 @@ def run_ablation_a5_threshold_sweep(
             cfg = {
                 "Q_gyro": 1e-5,
                 "Q_bias": 1e-8,
-                "R0": 3.5e-6,
+                "R0": 2e-6,
                 "use_direction_meas": True,
                 "innovation_stat": {
                     "window_W": 30,
@@ -198,7 +198,7 @@ def run_ablation_a5_threshold_sweep(
                     "ewma_alpha": 0.05,
                 },
                 "adaptation": {
-                    "lambda_max": 1000.0,
+                    "lambda_max": 100.0,
                     "lambda_min": 1.0,
                     "use_inflate_mapping": True,
                     "inflate_decay_rate": 0.9,

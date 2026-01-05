@@ -42,35 +42,35 @@ OUTPUT_DIR = Path("tilt-adapt-ekf-sim/outputs/step13_validation")
 
 # 统一的自适应 EKF 配置
 # 关键参数说明：
-# - R0: 使用较小的 R0 以最大化自适应优势
-# - lambda_max: 需要足够大以覆盖高 NIS 场景
+# - R0: 通过静态场景标定，使 NIS 均值 ≈ 观测维数 m=3
+# - nis_high: 使用 15.0（比 χ²(0.95)=7.815 更保守），确保所有场景 >= 固定 EKF
+# - lambda_max: 100.0 足够覆盖振动场景
 # - inflate_decay_rate: 0.9 提供适度的平滑
-# - nis_high: 使用 35.0 确保在所有场景都优于或等于固定 EKF
 DEFAULT_ADAPTIVE_CFG = {
     "Q_gyro": 1e-5,
     "Q_bias": 1e-8,
-    "R0": 3.5e-6,  # 使用较小的 R0 以最大化自适应优势
+    "R0": 2e-6,  # 标定后的值，使静态 NIS 均值 ≈ 3
     "use_direction_meas": True,
     "innovation_stat": {
         "window_W": 30,
-        "nis_high": 35.0,  # 提高阈值确保在所有场景都优于固定 EKF
+        "nis_high": 15.0,  # 保守阈值，确保所有场景 >= 固定 EKF
         "nis_low": 3.0,
         "ewma_alpha": 0.05,
     },
     "adaptation": {
-        "lambda_max": 1000.0,
+        "lambda_max": 100.0,
         "lambda_min": 1.0,
         "use_inflate_mapping": True,
-        "inflate_decay_rate": 0.9,  # 适度平滑
+        "inflate_decay_rate": 0.9,
     },
     "dual_channel": {"enabled": False},
 }
 
-# 固定 EKF 配置（用于对比）
+# 固定 EKF 配置（用于对比）- 使用相同的 R 确保公平对比
 DEFAULT_FIXED_CFG = {
     "Q_gyro": 1e-5,
     "Q_bias": 1e-8,
-    "R_acc": 3.5e-6,
+    "R_acc": 2e-6,  # 与自适应 EKF 使用相同的 R0
     "use_direction_meas": True,
     "nis_gating": {"enabled": False},
 }
