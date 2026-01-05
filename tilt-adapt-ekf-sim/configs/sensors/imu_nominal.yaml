@@ -1,0 +1,23 @@
+# IMU Nominal Parameters
+# 标称 IMU 参数
+
+sensor:
+  name: imu_nominal
+  
+gyro:
+  noise_density: 0.01        # deg/s/sqrt(Hz)
+  bias_instability: 0.1      # deg/hr
+  bias_random_walk: 0.001    # deg/s/sqrt(s)
+  scale_factor_error: 0.0    # ppm
+  misalignment: 0.0          # deg
+  range: 2000.0              # deg/s
+  resolution: 16             # bits
+  
+accel:
+  noise_density: 0.001       # m/s^2/sqrt(Hz)
+  bias_instability: 0.01     # mg
+  bias_random_walk: 0.0001   # m/s^2/sqrt(s)
+  scale_factor_error: 0.0    # ppm
+  misalignment: 0.0          # deg
+  range: 16.0                # g
+  resolution: 16             # bits

@@ -1,0 +1,16 @@
+# Ablation Study Configuration
+# 消融实验配置
+
+ablation:
+  name: feature_ablation
+  base_config: configs/filters/ekf_adaptive_innovation.yaml
+  
+  features:
+    - name: adaptive_r
+      enabled: [true, false]
+    - name: adaptive_lambda
+      enabled: [true, false]
+    - name: bias_estimation
+      enabled: [true, false]
+    - name: gating
+      enabled: [true, false]

@@ -1,0 +1,23 @@
+# IMU Worst 10% Parameters
+# 最差 10% IMU 参数
+
+sensor:
+  name: imu_worst10
+  
+gyro:
+  noise_density: 0.02        # deg/s/sqrt(Hz)
+  bias_instability: 0.5      # deg/hr
+  bias_random_walk: 0.005    # deg/s/sqrt(s)
+  scale_factor_error: 500.0  # ppm
+  misalignment: 0.1          # deg
+  range: 2000.0              # deg/s
+  resolution: 16             # bits
+  
+accel:
+  noise_density: 0.005       # m/s^2/sqrt(Hz)
+  bias_instability: 0.1      # mg
+  bias_random_walk: 0.001    # m/s^2/sqrt(s)
+  scale_factor_error: 500.0  # ppm
+  misalignment: 0.1          # deg
+  range: 16.0                # g
+  resolution: 16             # bits

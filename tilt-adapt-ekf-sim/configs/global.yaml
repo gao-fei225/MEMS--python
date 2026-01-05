@@ -1,0 +1,14 @@
+# Global Configuration
+# 全局配置文件
+
+seed: 42
+sample_rate: 100  # Hz
+gravity: 9.80665  # m/s^2
+
+paths:
+  data_generated: data/generated
+  data_external: data/external
+  outputs_logs: outputs/logs
+  outputs_figures: outputs/figures
+  outputs_tables: outputs/tables
+  outputs_config_packs: outputs/config_packs

@@ -1,0 +1,31 @@
+# Adaptive EKF Configuration (Innovation-based)
+# 新息驱动自适应 EKF 配置
+
+filter:
+  name: ekf_adaptive_innovation
+  type: ekf
+  adaptive: true
+  
+state:
+  attitude_representation: quaternion
+  estimate_bias: true
+  
+process_noise:
+  gyro_noise: 0.01           # rad/s (initial)
+  gyro_bias_rw: 0.0001       # rad/s/sqrt(s)
+  
+measurement_noise:
+  accel_noise: 0.1           # m/s^2 (initial)
+  
+adaptive:
+  method: innovation_based
+  window_size: 20            # samples
+  lambda_min: 0.1
+  lambda_max: 10.0
+  r_acc_min: 0.01            # m/s^2
+  r_acc_max: 10.0            # m/s^2
+  forgetting_factor: 0.95
+  
+initialization:
+  attitude_std: 5.0          # deg
+  gyro_bias_std: 0.1         # deg/s

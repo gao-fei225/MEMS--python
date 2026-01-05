@@ -1,0 +1,22 @@
+# Acceleration Scenario
+# 加减速工况
+
+scenario:
+  name: accel
+  duration: 60.0  # seconds
+  
+trajectory:
+  type: static
+  initial_attitude: [0.0, 0.0, 0.0]
+  
+linear_accel:
+  enabled: true
+  type: trapezoidal
+  direction: [1.0, 0.0, 0.0]  # body frame
+  max_accel: 2.0              # m/s^2
+  ramp_time: 2.0              # seconds
+  hold_time: 5.0              # seconds
+  
+temperature:
+  enabled: false
+  ambient: 25.0

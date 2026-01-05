@@ -1,0 +1,22 @@
+# Fixed EKF Configuration
+# 固定参数 EKF 配置
+
+filter:
+  name: ekf_fixed
+  type: ekf
+  adaptive: false
+  
+state:
+  attitude_representation: quaternion
+  estimate_bias: true
+  
+process_noise:
+  gyro_noise: 0.01           # rad/s
+  gyro_bias_rw: 0.0001       # rad/s/sqrt(s)
+  
+measurement_noise:
+  accel_noise: 0.1           # m/s^2
+  
+initialization:
+  attitude_std: 5.0          # deg
+  gyro_bias_std: 0.1         # deg/s

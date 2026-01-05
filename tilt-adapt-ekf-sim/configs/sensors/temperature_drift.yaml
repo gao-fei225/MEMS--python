@@ -1,0 +1,15 @@
+# Temperature Drift Model
+# 温漂模型参数
+
+temperature_drift:
+  enabled: true
+  
+gyro:
+  bias_temp_coeff: 0.01      # deg/s/C
+  scale_temp_coeff: 100.0    # ppm/C
+  reference_temp: 25.0       # Celsius
+  
+accel:
+  bias_temp_coeff: 0.001     # m/s^2/C
+  scale_temp_coeff: 50.0     # ppm/C
+  reference_temp: 25.0       # Celsius

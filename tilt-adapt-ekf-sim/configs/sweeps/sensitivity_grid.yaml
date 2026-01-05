@@ -1,0 +1,23 @@
+# Sensitivity Analysis Grid Configuration
+# 敏感性分析网格配置
+
+sensitivity:
+  name: param_sensitivity
+  
+  parameters:
+    - name: process_noise.gyro_noise
+      range: [0.001, 0.1]
+      steps: 10
+      scale: log
+    - name: measurement_noise.accel_noise
+      range: [0.01, 1.0]
+      steps: 10
+      scale: log
+    - name: adaptive.window_size
+      range: [5, 50]
+      steps: 10
+      scale: linear
+    - name: adaptive.forgetting_factor
+      range: [0.8, 0.99]
+      steps: 10
+      scale: linear

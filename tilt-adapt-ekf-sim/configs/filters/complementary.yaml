@@ -1,0 +1,12 @@
+# Complementary Filter Configuration
+# 互补滤波器配置
+
+filter:
+  name: complementary
+  type: complementary
+  
+parameters:
+  alpha: 0.98                # gyro weight
+  
+initialization:
+  attitude: [0.0, 0.0, 0.0]  # roll, pitch, yaw (deg)

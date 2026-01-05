@@ -1,0 +1,20 @@
+# Vibration Scenario
+# 振动工况
+
+scenario:
+  name: vibration
+  duration: 60.0  # seconds
+  
+trajectory:
+  type: static
+  initial_attitude: [0.0, 0.0, 0.0]
+  
+linear_accel:
+  enabled: true
+  type: vibration
+  frequency_range: [10.0, 100.0]  # Hz
+  amplitude: 0.5                   # m/s^2 RMS
+  
+temperature:
+  enabled: false
+  ambient: 25.0
