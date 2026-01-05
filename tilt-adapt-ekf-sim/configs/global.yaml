@@ -1,10 +1,17 @@
 # Global Configuration
 # 全局配置文件
 
-seed: 42
-sample_rate: 100  # Hz
 gravity: 9.80665  # m/s^2
+data_dir: data/generated
+output_dir: outputs
 
+# 默认参数
+defaults:
+  seed: 42
+  sample_rate: 100  # Hz
+  burn_in_s: 0.5    # 指标计算 burn-in 时间
+
+# 路径配置（兼容旧格式）
 paths:
   data_generated: data/generated
   data_external: data/external

@@ -1,0 +1,20 @@
+{
+  "vibration": {
+    "rmse_fixed": 1.061526881047907,
+    "rmse_adaptive": 1.021257499929476,
+    "peak_fixed": 3.9119494907037056,
+    "peak_adaptive": 4.750568082296721,
+    "lambda_max": 100.0,
+    "lambda_min": 1.0
+  },
+  "shock": {
+    "rmse_fixed": 0.14089761383923582,
+    "rmse_adaptive": 0.1411493800164149,
+    "lambda_recovered": 1.0
+  },
+  "causality": {
+    "causality_ratio": 1.0,
+    "lambda_correlation": 1.0,
+    "passed": 1.0
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "max_no_sat": 109.80665,
+  "max_with_sat": 50.0,
+  "saturation_range": 50.0,
+  "n_saturated_samples": 9,
+  "saturation_ratio_pct": 0.5988023952095809,
+  "clipped_correctly": true,
+  "no_wraparound": true
+}

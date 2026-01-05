@@ -1,0 +1,32 @@
+{
+  "metrics": {
+    "rmse_roll": 0.04427328929052658,
+    "rmse_pitch": 0.07906145371227016,
+    "peak_roll": 0.0775839687447899,
+    "peak_pitch": 0.12092400447454565,
+    "bias_roll": -0.042757025279640745,
+    "bias_pitch": -0.07826710949879075,
+    "noise_roll": 0.011487425030824684,
+    "noise_pitch": 0.011179133857403179,
+    "mean_roll": -0.042757025279640745,
+    "mean_pitch": -0.07826710949879075,
+    "std_roll": 0.011487425030824684,
+    "std_pitch": 0.011179133857403179,
+    "burn_in_samples": 50,
+    "burn_in_s": 0.5
+  },
+  "experiment": {
+    "name": "quasi_static_improved",
+    "scenario": "quasi_static",
+    "sensor": "imu_nominal",
+    "filter": "complementary",
+    "filter_params": {
+      "alpha": 0.98
+    },
+    "burn_in_s": 0.5,
+    "fs": 100.0,
+    "duration_s": 30.0,
+    "n_samples": 3001
+  },
+  "timestamp": "2025-12-25T15:58:21.251513"
+}

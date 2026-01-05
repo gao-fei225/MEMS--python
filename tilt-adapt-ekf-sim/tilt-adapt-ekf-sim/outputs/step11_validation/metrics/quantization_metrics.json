@@ -1,0 +1,23 @@
+{
+  "quant_mode": "round",
+  "bits": 8,
+  "range": 20.0,
+  "expected_lsb": 0.15625,
+  "unique_codes": 129,
+  "unique_codes_ramp": 129,
+  "unique_codes_sine": 45,
+  "mean_error": -5.842548667089886e-18,
+  "mean_error_lsb": -3.739231146937527e-17,
+  "quant_error_min": -0.07750000000000057,
+  "quant_error_max": 0.07750000000000057,
+  "quant_error_std": 0.04590197330307699,
+  "error_percentiles": {
+    "p05": -0.06786435983196171,
+    "p50": 0.0,
+    "p95": 0.06786435983194047
+  },
+  "error_in_range": true,
+  "lsb_multiple": true,
+  "codes_ok": true,
+  "mean_ok": true
+}

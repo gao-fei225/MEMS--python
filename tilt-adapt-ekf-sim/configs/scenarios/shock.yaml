@@ -1,21 +1,20 @@
-# Shock Scenario
-# 冲击工况
+# 冲击工况配置
+# a_lin_n 脉冲（峰值、脉宽）
 
-scenario:
-  name: shock
-  duration: 10.0  # seconds
-  
-trajectory:
-  type: static
-  initial_attitude: [0.0, 0.0, 0.0]
-  
-linear_accel:
-  enabled: true
-  type: shock
-  peak_accel: 50.0    # m/s^2
-  duration: 0.01      # seconds
-  times: [2.0, 5.0, 8.0]  # shock occurrence times
-  
-temperature:
-  enabled: false
-  ambient: 25.0
+name: shock
+fs: 100
+duration_s: 20
+
+# 姿态（固定）
+roll_deg: 2
+pitch_deg: -1
+yaw_deg: 0
+
+# 冲击参数
+shock_peak: 50.0      # m/s^2 峰值（约 5g）
+shock_width_s: 0.05   # 脉冲宽度 (s)
+shock_times: [5.0, 10.0, 15.0]  # 冲击发生时间
+shock_axis: z         # 冲击方向
+
+temp_C: 25
+seed: 1

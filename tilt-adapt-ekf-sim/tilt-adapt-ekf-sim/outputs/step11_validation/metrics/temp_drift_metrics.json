@@ -1,0 +1,21 @@
+{
+  "temp_range": [
+    20.0,
+    40.0
+  ],
+  "bias_range": [
+    -0.05,
+    0.15
+  ],
+  "expected_bias_range": [
+    -0.05,
+    0.15
+  ],
+  "slope_fit": 0.009999999999999998,
+  "expected_slope": 0.01,
+  "slope_error_pct": 1.734723475976807e-14,
+  "r_squared": 0.9999999999999998,
+  "monotonic": true,
+  "start_error": 0.0,
+  "end_error": 0.0
+}

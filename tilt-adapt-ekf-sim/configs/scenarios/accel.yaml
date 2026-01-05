@@ -1,22 +1,22 @@
-# Acceleration Scenario
-# 加减速工况
+# 加减速工况配置
+# 用于测试 EKF 在动态加速度下的量测失配
 
-scenario:
-  name: accel
-  duration: 60.0  # seconds
-  
-trajectory:
-  type: static
-  initial_attitude: [0.0, 0.0, 0.0]
-  
-linear_accel:
-  enabled: true
-  type: trapezoidal
-  direction: [1.0, 0.0, 0.0]  # body frame
-  max_accel: 2.0              # m/s^2
-  ramp_time: 2.0              # seconds
-  hold_time: 5.0              # seconds
-  
-temperature:
-  enabled: false
-  ambient: 25.0
+name: accel
+fs: 100
+duration_s: 30
+
+# 姿态（近水平）
+roll_deg: 2
+pitch_deg: -1
+yaw_deg: 0
+
+# 加速度配置
+accel_type: step      # step / ramp / sine
+accel_axis: x         # x / y / z (导航系)
+accel_peak: 2.0       # m/s^2 (约 0.2g)
+accel_freq_hz: 0.2    # 仅 sine 模式使用
+accel_start_s: 5.0    # 加速开始时间
+accel_duration_s: 10.0  # 加速持续时间
+
+temp_C: 25
+seed: 1

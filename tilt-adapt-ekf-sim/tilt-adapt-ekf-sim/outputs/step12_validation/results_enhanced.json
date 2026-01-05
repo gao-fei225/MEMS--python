@@ -1,0 +1,63 @@
+{
+  "vibration": {
+    "rmse_fixed": 1.061526881047907,
+    "rmse_adaptive": 1.615269200650885,
+    "rmse_improvement_pct": -52.1647006297514,
+    "peak_fixed": 3.9119494907037056,
+    "peak_adaptive": 4.851479293859654,
+    "peak_change_pct": 24.016920601573013,
+    "lambda_max": 10.0,
+    "lambda_min": 1.0,
+    "lambda_saturation_ratio": 0.9143618793735422,
+    "time_ratio_high_lambda": 0.9843385538153949,
+    "corr_NIS_lambda": -0.13624290483825732,
+    "lag_NIS_to_lambda": 94,
+    "peak_time": 0.04,
+    "lambda_at_peak": 1.1576250000000001,
+    "nis_at_peak": 283.55933021792794
+  },
+  "shock": {
+    "rmse_fixed": 0.14089761383923582,
+    "rmse_adaptive": 0.1411631315162541,
+    "lambda_recovered": 1.0,
+    "shock_stats": [
+      {
+        "time": 5.0,
+        "max_NIS": 8.182487727649365,
+        "mean_NIS": 2.552445324410892,
+        "max_lambda": 1.0,
+        "mean_lambda": 1.0,
+        "max_NIS_fixed": 8.113409587374356
+      },
+      {
+        "time": 10.0,
+        "max_NIS": 6.426279511763738,
+        "mean_NIS": 2.0520669183352456,
+        "max_lambda": 1.0,
+        "mean_lambda": 1.0,
+        "max_NIS_fixed": 6.601683004951616
+      },
+      {
+        "time": 15.0,
+        "max_NIS": 9.023006012643641,
+        "mean_NIS": 1.9793408018923468,
+        "max_lambda": 1.0,
+        "mean_lambda": 1.0,
+        "max_NIS_fixed": 9.023072223542357
+      }
+    ],
+    "nis_triggered": false,
+    "lambda_responded": false
+  },
+  "causality": {
+    "causality_ratio": 0.8333333333333334,
+    "corr_NIS_lambda": -0.47324646629110473,
+    "lag_NIS_to_lambda": 57,
+    "lambda_mean_high_NIS": 9.907579578817792,
+    "lambda_mean_low_NIS": 8.399861111111111,
+    "lambda_correlation": 1.0,
+    "lambda_mean": 9.89865835138102,
+    "lambda_median": 10.0,
+    "passed": false
+  }
+}

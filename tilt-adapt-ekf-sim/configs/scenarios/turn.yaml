@@ -1,20 +1,19 @@
-# Turn Scenario
-# 转弯工况
+# 转弯工况配置
+# yaw_rate 给定 + 向心加速度
 
-scenario:
-  name: turn
-  duration: 60.0  # seconds
-  
-trajectory:
-  type: constant_rate
-  axis: yaw
-  rate: 30.0  # deg/s
-  
-linear_accel:
-  enabled: true
-  type: centripetal
-  radius: 10.0  # meters
-  
-temperature:
-  enabled: false
-  ambient: 25.0
+name: turn
+fs: 100
+duration_s: 30
+
+# 姿态（近水平）
+roll_deg: 2
+pitch_deg: -1
+
+# 转弯参数
+yaw_rate_dps: 30.0    # deg/s
+turn_radius_m: 10.0   # 转弯半径 (m)
+turn_start_s: 5.0     # 转弯开始时间
+turn_duration_s: 20.0 # 转弯持续时间
+
+temp_C: 25
+seed: 1

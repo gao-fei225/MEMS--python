@@ -1,31 +1,34 @@
-# Adaptive EKF Configuration (Innovation-based)
-# 新息驱动自适应 EKF 配置
+# 自适应 EKF 配置 - 基于新息统计
+# Step 12: Innovation-based Adaptive EKF
 
-filter:
-  name: ekf_adaptive_innovation
-  type: ekf
-  adaptive: true
-  
-state:
-  attitude_representation: quaternion
-  estimate_bias: true
-  
-process_noise:
-  gyro_noise: 0.01           # rad/s (initial)
-  gyro_bias_rw: 0.0001       # rad/s/sqrt(s)
-  
-measurement_noise:
-  accel_noise: 0.1           # m/s^2 (initial)
-  
-adaptive:
-  method: innovation_based
-  window_size: 20            # samples
-  lambda_min: 0.1
-  lambda_max: 10.0
-  r_acc_min: 0.01            # m/s^2
-  r_acc_max: 10.0            # m/s^2
-  forgetting_factor: 0.95
-  
-initialization:
-  attitude_std: 5.0          # deg
-  gyro_bias_std: 0.1         # deg/s
+# 过程噪声
+Q_gyro: 1.0e-5      # 陀螺仪噪声功率谱密度 (rad/s)^2/Hz
+Q_bias: 1.0e-8      # 偏置随机游走功率谱密度 (rad/s)^2/Hz
+
+# 基准测量噪声（方向量测）
+R0: 3.5e-6          # 基准测量噪声方差
+
+# 方向量测开关
+use_direction_meas: true
+
+# 初始不确定度
+init_P_att: 7.6e-3  # (5°)^2 in rad^2
+init_P_bias: 1.0e-4 # (0.01 rad/s)^2
+
+# 新息统计配置
+innovation_stat:
+  window_W: 50      # 滑窗大小
+  nis_high: 10.0    # NIS 上阈值（超过则增大 λ）
+  nis_low: 2.0      # NIS 下阈值（低于则减小 λ）
+
+# 自适应参数
+adaptation:
+  r_up: 1.2         # λ 上升因子
+  r_down: 0.98      # λ 下降因子
+  lambda_max: 100.0 # λ 最大值
+  lambda_min: 1.0   # λ 最小值
+
+# 日志配置
+logging:
+  save_nis: true
+  save_lambda: true

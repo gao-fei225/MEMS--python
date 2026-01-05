@@ -1,0 +1,9 @@
+{
+  "acc_max_diff": 0.0,
+  "acc_mean_diff": 0.0,
+  "gyro_max_diff": 0.0,
+  "gyro_mean_diff": 0.0,
+  "has_nan": false,
+  "has_inf": false,
+  "length_match": true
+}

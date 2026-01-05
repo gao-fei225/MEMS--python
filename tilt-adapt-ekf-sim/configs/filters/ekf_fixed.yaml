@@ -1,22 +1,31 @@
-# Fixed EKF Configuration
-# 固定参数 EKF 配置
+# Fixed-Noise EKF Configuration
+# 固定噪声 EKF 配置
+#
+# 改进版本 (v2):
+# - 方向量测：使用单位向量 acc/||acc|| 而非原始加速度，更鲁棒
+# - NIS 门控：超过阈值时膨胀 R，降低更新权重
+# - R 通过 NIS 校准：使 mean_NIS ≈ 3
 
 filter:
   name: ekf_fixed
-  type: ekf
-  adaptive: false
-  
-state:
-  attitude_representation: quaternion
-  estimate_bias: true
-  
-process_noise:
-  gyro_noise: 0.01           # rad/s
-  gyro_bias_rw: 0.0001       # rad/s/sqrt(s)
-  
-measurement_noise:
-  accel_noise: 0.1           # m/s^2
-  
-initialization:
-  attitude_std: 5.0          # deg
-  gyro_bias_std: 0.1         # deg/s
+  type: ekf_fixed
+
+# 过程噪声参数
+Q_gyro: 1.0e-5      # 陀螺仪噪声功率谱密度 (rad/s)^2/Hz
+Q_bias: 1.0e-8      # 偏置随机游走功率谱密度 (rad/s)^2/Hz
+
+# 测量噪声参数（方向量测时为方向噪声方差）
+R_acc: 3.5e-6       # 方向噪声方差（NIS 校准后）
+
+# 方向量测开关
+use_direction_meas: true
+
+# NIS 门控配置
+nis_gating:
+  enabled: true
+  threshold: 7.815   # χ²(3) 的 95% 分位数
+  mode: inflate_R    # "skip" 或 "inflate_R"
+
+# 初始不确定度
+init_P_att: 0.0076  # 初始姿态不确定度 (rad)^2，约 5°
+init_P_bias: 0.0001 # 初始偏置不确定度 (rad/s)^2，约 0.01 rad/s

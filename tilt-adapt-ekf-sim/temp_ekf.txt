@@ -1,0 +1,299 @@
+﻿"""
+Adaptive EKF - Dual Channel Version
+"""
+
+import numpy as np
+from typing import Dict, Any, Tuple
+from collections import deque
+
+from ..common.math3d import (
+    quat_normalize,
+    quat_multiply,
+    quat_to_rpy,
+    quat_to_R_bn,
+    rpy_to_quat,
+    skew_symmetric,
+)
+
+GRAVITY = 9.80665
+CHI2_3_95 = 7.815
+
+
+def quat_omega_matrix(omega):
+    p, q, r = omega
+    return np.array([
+        [0, -p, -q, -r],
+        [p,  0,  r, -q],
+        [q, -r,  0,  p],
+        [r,  q, -p,  0]
+    ], dtype=np.float64)
+
+
+def propagate_quaternion(q, omega, dt):
+    Omega = quat_omega_matrix(omega)
+    q_new = q + 0.5 * Omega @ q * dt
+    return quat_normalize(q_new)
+
+
+class EKFAdaptive:
+    def __init__(self, cfg):
+        self.Q_gyro = cfg.get("Q_gyro", 1e-5)
+        self.Q_bias = cfg.get("Q_bias", 1e-8)
+        self.R0 = cfg.get("R0", 3.5e-6)
+        
+        innov_cfg = cfg.get("innovation_stat", {})
+        self.window_W = innov_cfg.get("window_W", 50)
+        self.nis_high = innov_cfg.get("nis_high", 10.0)
+        self.nis_low = innov_cfg.get("nis_low", 2.0)
+        self.nis_ewma_alpha = innov_cfg.get("ewma_alpha", 0.1)
+        
+        adapt_cfg = cfg.get("adaptation", {})
+        self.r_up = adapt_cfg.get("r_up", 1.2)
+        self.r_down = adapt_cfg.get("r_down", 0.98)
+        self.lambda_max = adapt_cfg.get("lambda_max", 100.0)
+        self.lambda_min = adapt_cfg.get("lambda_min", 1.0)
+        self.soft_saturation = adapt_cfg.get("soft_saturation", True)
+        self.lambda_soft_max = adapt_cfg.get("lambda_soft_max", 20.0)
+        
+        dual_cfg = cfg.get("dual_channel", {})
+        self.use_dual_channel = dual_cfg.get("enabled", True)
+        self.mag_weight = dual_cfg.get("mag_weight", 1.0)
+        self.mag_sigma = dual_cfg.get("mag_sigma", 0.5)
+        self.combine_mode = dual_cfg.get("combine_mode", "max")
+        
+        self.use_direction_meas = cfg.get("use_direction_meas", True)
+        
+        init_P_att = cfg.get("init_P_att", (5 * np.pi / 180)**2)
+        init_P_bias = cfg.get("init_P_bias", (0.01)**2)
+        
+        self.q = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float64)
+        self.b_g = np.zeros(3, dtype=np.float64)
+        self.P = np.diag([init_P_att]*3 + [init_P_bias]*3)
+        
+        self.g_n = np.array([0.0, 0.0, GRAVITY], dtype=np.float64)
+        self.g_n_unit = self.g_n / np.linalg.norm(self.g_n)
+        
+        self.lambda_k = 1.0
+        self.R_acc = self.R0
+        self.nis_ewma = 3.0
+        self.nis_window = deque(maxlen=self.window_W)
+
+    def predict(self, gyro, dt):
+        omega = gyro - self.b_g
+        self.q = propagate_quaternion(self.q, omega, dt)
+        
+        omega_skew = skew_symmetric(omega)
+        F = np.eye(6, dtype=np.float64)
+        F[0:3, 0:3] = np.eye(3) - omega_skew * dt
+        F[0:3, 3:6] = -np.eye(3) * dt
+        
+        Q = np.zeros((6, 6), dtype=np.float64)
+        Q[0:3, 0:3] = np.eye(3) * self.Q_gyro * dt
+        Q[3:6, 3:6] = np.eye(3) * self.Q_bias * dt
+        
+        self.P = F @ self.P @ F.T + Q
+    
+    def _compute_magnitude_nis(self, acc):
+        acc_norm = np.linalg.norm(acc)
+        mag_error = acc_norm - GRAVITY
+        nis_mag = (mag_error / self.mag_sigma) ** 2
+        return float(nis_mag)
+    
+    def _combine_nis(self, nis_dir, nis_mag):
+        if self.combine_mode == "max":
+            return max(nis_dir, nis_mag * self.mag_weight)
+        elif self.combine_mode == "sum":
+            return nis_dir + nis_mag * self.mag_weight
+        else:
+            return max(nis_dir, nis_mag * self.mag_weight)
+
+    def update(self, acc):
+        R_bn = quat_to_R_bn(self.q)
+        
+        nis_mag = self._compute_magnitude_nis(acc) if self.use_dual_channel else 0.0
+        
+        if self.use_direction_meas:
+            acc_norm = np.linalg.norm(acc)
+            if acc_norm < 1e-6:
+                return np.zeros(3), 0.0, 0.0, self.lambda_k, 0.0, 0.0
+            
+            z = acc / acc_norm
+            h = R_bn @ self.g_n_unit
+            v = z - h
+            
+            H = np.zeros((3, 6), dtype=np.float64)
+            H[0:3, 0:3] = skew_symmetric(h)
+        else:
+            acc_pred = R_bn @ self.g_n
+            v = acc - acc_pred
+            
+            H = np.zeros((3, 6), dtype=np.float64)
+            H[0:3, 0:3] = skew_symmetric(acc_pred)
+        
+        R0_mat = np.eye(3) * self.R0
+        S0 = H @ self.P @ H.T + R0_mat
+        S0_inv = np.linalg.inv(S0)
+        NIS_dir = float(v.T @ S0_inv @ v)
+        
+        if self.use_dual_channel:
+            NIS_combined = self._combine_nis(NIS_dir, nis_mag)
+        else:
+            NIS_combined = NIS_dir
+        
+        self.nis_ewma = self.nis_ewma_alpha * NIS_combined + (1 - self.nis_ewma_alpha) * self.nis_ewma
+        self.nis_window.append(NIS_combined)
+        
+        self._adapt_lambda(self.nis_ewma)
+        
+        R_adaptive = np.eye(3) * self.R_acc
+        S = H @ self.P @ H.T + R_adaptive
+        S_inv = np.linalg.inv(S)
+        NIS_adaptive = float(v.T @ S_inv @ v)
+        
+        K = self.P @ H.T @ S_inv
+        dx = K @ v
+        
+        dtheta = dx[0:3]
+        dtheta_norm = np.linalg.norm(dtheta)
+        if dtheta_norm > 1e-10:
+            dq = np.array([
+                np.cos(dtheta_norm / 2),
+                dtheta[0] / dtheta_norm * np.sin(dtheta_norm / 2),
+                dtheta[1] / dtheta_norm * np.sin(dtheta_norm / 2),
+                dtheta[2] / dtheta_norm * np.sin(dtheta_norm / 2),
+            ])
+            self.q = quat_multiply(self.q, dq)
+            self.q = quat_normalize(self.q)
+        
+        self.b_g = self.b_g + dx[3:6]
+        
+        I_KH = np.eye(6) - K @ H
+        self.P = I_KH @ self.P @ I_KH.T + K @ R_adaptive @ K.T
+        
+        return v, NIS_dir, NIS_adaptive, self.lambda_k, float(nis_mag), float(NIS_combined)
+
+    def _adapt_lambda(self, nis_smoothed):
+        if nis_smoothed > self.nis_high:
+            if self.soft_saturation and self.lambda_k > self.lambda_soft_max:
+                saturation_factor = 1.0 - np.tanh(
+                    (self.lambda_k - self.lambda_soft_max) / 
+                    (self.lambda_max - self.lambda_soft_max)
+                )
+                effective_r_up = 1.0 + (self.r_up - 1.0) * saturation_factor
+            else:
+                effective_r_up = self.r_up
+            self.lambda_k = min(self.lambda_k * effective_r_up, self.lambda_max)
+        elif nis_smoothed < self.nis_low:
+            self.lambda_k = max(self.lambda_k * self.r_down, self.lambda_min)
+        else:
+            decay_rate = 0.995
+            self.lambda_k = max(self.lambda_k * decay_rate, self.lambda_min)
+        
+        self.R_acc = self.R0 * self.lambda_k
+    
+    def get_window_stats(self):
+        if len(self.nis_window) == 0:
+            return {"mean": 0.0, "std": 0.0, "max": 0.0}
+        nis_arr = np.array(self.nis_window)
+        return {"mean": float(np.mean(nis_arr)), "std": float(np.std(nis_arr)), "max": float(np.max(nis_arr))}
+    
+    def get_attitude(self):
+        return quat_to_rpy(self.q)
+    
+    def get_bias(self):
+        return self.b_g.copy()
+    
+    def get_covariance(self):
+        return self.P.copy()
+    
+    def get_lambda(self):
+        return self.lambda_k
+    
+    def get_R_acc(self):
+        return self.R_acc
+    
+    def get_nis_ewma(self):
+        return self.nis_ewma
+
+
+def run_ekf_adaptive(ds, cfg):
+    acc = ds["meas"]["acc"]
+    gyro = ds["meas"]["gyro"]
+    fs = ds["meta"]["fs"]
+    dt = 1.0 / fs
+    
+    n_samples = len(acc)
+    ekf = EKFAdaptive(cfg)
+    
+    from ..filters.complementary import acc_to_roll_pitch
+    roll_init, pitch_init = acc_to_roll_pitch(acc[0:1])
+    ekf.q = rpy_to_quat(roll_init[0], pitch_init[0], 0.0)
+    
+    roll_est = np.zeros(n_samples, dtype=np.float64)
+    pitch_est = np.zeros(n_samples, dtype=np.float64)
+    yaw_est = np.zeros(n_samples, dtype=np.float64)
+    bias_gyro = np.zeros((n_samples, 3), dtype=np.float64)
+    
+    innovation = np.zeros((n_samples, 3), dtype=np.float64)
+    nis = np.zeros(n_samples, dtype=np.float64)
+    nis_raw = np.zeros(n_samples, dtype=np.float64)
+    nis_mag = np.zeros(n_samples, dtype=np.float64)
+    nis_combined = np.zeros(n_samples, dtype=np.float64)
+    lambda_k = np.zeros(n_samples, dtype=np.float64)
+    R_acc = np.zeros(n_samples, dtype=np.float64)
+    P_diag = np.zeros((n_samples, 6), dtype=np.float64)
+    window_mean_nis = np.zeros(n_samples, dtype=np.float64)
+    nis_ewma = np.zeros(n_samples, dtype=np.float64)
+    
+    roll, pitch, yaw = ekf.get_attitude()
+    roll_est[0] = roll
+    pitch_est[0] = pitch
+    yaw_est[0] = yaw
+    bias_gyro[0] = ekf.get_bias()
+    lambda_k[0] = ekf.get_lambda()
+    R_acc[0] = ekf.get_R_acc()
+    P_diag[0] = np.diag(ekf.get_covariance())
+    nis_ewma[0] = ekf.get_nis_ewma()
+    
+    for i in range(1, n_samples):
+        ekf.predict(gyro[i], dt)
+        v, nis_dir_k, nis_k, lam_k, nis_mag_k, nis_comb_k = ekf.update(acc[i])
+        
+        roll, pitch, yaw = ekf.get_attitude()
+        roll_est[i] = roll
+        pitch_est[i] = pitch
+        yaw_est[i] = yaw
+        bias_gyro[i] = ekf.get_bias()
+        
+        innovation[i] = v
+        nis[i] = nis_k
+        nis_raw[i] = nis_dir_k
+        nis_mag[i] = nis_mag_k
+        nis_combined[i] = nis_comb_k
+        lambda_k[i] = lam_k
+        R_acc[i] = ekf.get_R_acc()
+        P_diag[i] = np.diag(ekf.get_covariance())
+        nis_ewma[i] = ekf.get_nis_ewma()
+        
+        stats = ekf.get_window_stats()
+        window_mean_nis[i] = stats["mean"]
+    
+    return {
+        "roll": roll_est,
+        "pitch": pitch_est,
+        "yaw": yaw_est,
+        "bias_gyro": bias_gyro,
+        "debug": {
+            "innovation": innovation,
+            "nis": nis,
+            "nis_raw": nis_raw,
+            "nis_mag": nis_mag,
+            "nis_combined": nis_combined,
+            "lambda_k": lambda_k,
+            "R_acc": R_acc,
+            "P_diag": P_diag,
+            "window_mean_nis": window_mean_nis,
+            "nis_ewma": nis_ewma,
+        },
+    }
+

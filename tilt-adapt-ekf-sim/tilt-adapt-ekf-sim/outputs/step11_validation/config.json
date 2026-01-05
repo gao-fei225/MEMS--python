@@ -1,0 +1,49 @@
+{
+  "version": "step11_v1.0",
+  "timestamp": "2026-01-02T14:27:34.509124",
+  "seed": 42,
+  "fs": 100.0,
+  "dt": 0.01,
+  "duration_s": 60.0,
+  "tests": {
+    "regression": {
+      "duration_s": 10.0,
+      "roll_deg": 5.0,
+      "pitch_deg": -3.0,
+      "temp_C": 25.0
+    },
+    "bias_rw": {
+      "duration_s": 60.0,
+      "sigma_rw_acc": 0.001,
+      "sigma_rw_gyro": 0.0001
+    },
+    "temp_drift": {
+      "duration_s": 30.0,
+      "temp_start": 20.0,
+      "temp_end": 40.0,
+      "k1_acc": 0.01,
+      "k1_gyro": 0.001,
+      "T0": 25.0
+    },
+    "scale_misalign": {
+      "scale_error": [
+        0.001,
+        0.001,
+        0.001
+      ],
+      "misalignment": [
+        0.001,
+        -0.001,
+        0.0005
+      ]
+    },
+    "saturation": {
+      "range_acc": 50.0,
+      "shock_peak": 100.0
+    },
+    "quantization": {
+      "bits": 8,
+      "range": 20.0
+    }
+  }
+}

@@ -1,20 +1,15 @@
 # Swing Scenario
-# 摆动工况
+# 摆动工况 - run_one 格式
 
-scenario:
-  name: swing
-  duration: 60.0  # seconds
-  
-trajectory:
-  type: sinusoidal
-  axes: [roll, pitch]
-  amplitude: [10.0, 10.0]  # degrees
-  frequency: [0.5, 0.3]    # Hz
-  phase: [0.0, 90.0]       # degrees
-  
-linear_accel:
-  enabled: false
-  
-temperature:
-  enabled: false
-  ambient: 25.0
+name: swing
+fs: 100
+duration_s: 30
+roll_amp_deg: 10
+pitch_amp_deg: 5
+roll_freq_hz: 0.3
+pitch_freq_hz: 0.2
+roll_phase_deg: 0
+pitch_phase_deg: 90
+yaw_deg: 0
+temp_C: 25
+seed: 1

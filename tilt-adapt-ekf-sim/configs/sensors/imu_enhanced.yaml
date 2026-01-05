@@ -1,0 +1,68 @@
+# IMU Enhanced Parameters - Step 11
+# 增强误差模型配置（所有误差项可独立开关）
+
+acc:
+  # 基础参数
+  bias0: [0.02, -0.01, 0.03]  # m/s^2
+  sigma_white: 0.02           # m/s^2
+  
+  # 偏置随机游走
+  bias_rw:
+    enabled: true
+    sigma_rw: 1.0e-4          # m/s^2/sqrt(s)
+  
+  # 温漂
+  temp_drift:
+    enabled: true
+    k1: [1.0e-3, 1.0e-3, 1.0e-3]  # m/s^2/°C
+    T0: 25.0                       # 参考温度 °C
+  
+  # 比例因子/安装偏差
+  scale_misalign:
+    enabled: false
+    scale_error: [100.0e-6, 100.0e-6, 100.0e-6]  # ppm -> 实际值
+    misalignment: [0.001, 0.001, 0.001]          # rad (~0.06°)
+  
+  # 饱和
+  saturation:
+    enabled: false
+    range: 160.0              # m/s^2 (±16g)
+  
+  # 量化
+  quantization:
+    enabled: false
+    bits: 16
+    range: 160.0              # m/s^2
+
+gyro:
+  # 基础参数
+  bias0: [0.001, 0.001, -0.002]  # rad/s
+  sigma_white: 0.001             # rad/s
+  
+  # 偏置随机游走
+  bias_rw:
+    enabled: true
+    sigma_rw: 1.0e-5          # rad/s/sqrt(s)
+  
+  # 温漂
+  temp_drift:
+    enabled: true
+    k1: [1.0e-4, 1.0e-4, 1.0e-4]  # rad/s/°C
+    T0: 25.0                       # 参考温度 °C
+  
+  # 比例因子/安装偏差
+  scale_misalign:
+    enabled: false
+    scale_error: [100.0e-6, 100.0e-6, 100.0e-6]  # ppm
+    misalignment: [0.001, 0.001, 0.001]          # rad
+  
+  # 饱和
+  saturation:
+    enabled: false
+    range: 35.0               # rad/s (~2000°/s)
+  
+  # 量化
+  quantization:
+    enabled: false
+    bits: 16
+    range: 35.0               # rad/s

@@ -1,0 +1,237 @@
+# Implementation Plan
+
+## 已完成的基础设施
+
+以下模块已在设计阶段实现并通过测试：
+
+- [x] 项目目录结构 (`tilt-adapt-ekf-sim/`)
+- [x] 坐标系约定文档 (`docs/01_frames_and_conventions.md`)
+- [x] 坐标系自检脚本 (`scripts/smoke_frames.py`) - 6 项测试通过
+- [x] 数据集 Schema (`src/datasets/schema.py`)
+- [x] 数据集验证 (`src/datasets/validate.py`)
+- [x] 数据集序列化 (`src/datasets/serialize.py`)
+- [x] 数据集自检脚本 (`scripts/smoke_dataset_io.py`) - 4 项测试通过
+- [x] 数学库 (`src/common/math3d.py`)
+- [x] 坐标系与重力模型 (`src/truth/frames.py`)
+- [x] 工况库 MVP (`src/truth/scenarios.py`) - 准静态、摆动
+- [x] 真值生成自检脚本 (`scripts/smoke_truth_mvp.py`) - 4 项测试通过
+
+---
+
+## 待实现任务
+
+- [x] 1. 实现 IMU 传感器模型 (Step 5 + Step 11)
+  - [x] 1.1 实现基础 IMU 前向模型
+    - 创建 `src/sensors/imu_model.py`
+    - 实现 `forward_imu()` 函数：truth → gyro_meas, acc_meas
+    - 添加高斯白噪声
+    - _Requirements: 2.1, 2.6_
+  - [ ]* 1.2 编写属性测试：噪声统计特性
+    - **Property 4: 噪声统计特性**
+    - **Validates: Requirements 2.1**
+  - [x] 1.3 实现偏置随机游走模型
+    - 创建 `src/sensors/error_models.py`
+    - 实现 `add_bias_random_walk()` 函数
+    - _Requirements: 2.2_
+  - [ ]* 1.4 编写属性测试：偏置随机游走特性
+    - **Property 5: 偏置随机游走特性**
+    - **Validates: Requirements 2.2**
+  - [x] 1.5 实现温漂模型
+    - 实现 `apply_temperature_drift()` 函数
+    - _Requirements: 2.3_
+  - [ ]* 1.6 编写属性测试：温漂线性关系
+    - **Property 6: 温漂线性关系**
+    - **Validates: Requirements 2.3**
+  - [x] 1.7 实现比例因子和安装偏差模型
+    - 实现 `apply_scale_misalignment()` 函数
+    - _Requirements: 2.4_
+  - [ ]* 1.8 编写属性测试：比例因子变换
+    - **Property 7: 比例因子和安装偏差变换**
+    - **Validates: Requirements 2.4**
+  - [x] 1.9 实现饱和和量化模型
+    - 实现 `apply_saturation()` 和 `apply_quantization()` 函数
+    - _Requirements: 2.5_
+  - [ ]* 1.10 编写属性测试：饱和限幅和量化步长
+    - **Property 8: 饱和限幅**
+    - **Property 9: 量化步长**
+    - **Validates: Requirements 2.5**
+  - [x] 1.11 创建传感器模型自检脚本
+    - 创建 `scripts/smoke_sensor_model.py`
+    - 验证所有误差模型
+
+- [ ] 2. Checkpoint - 确保所有测试通过
+  - 确保所有测试通过，如有问题请询问用户
+
+- [ ] 3. 完善数据集生成流程
+  - [ ] 3.1 实现数据集生成入口
+    - 创建 `src/datasets/generate.py`
+    - 整合 truth + sensor model → dataset
+    - _Requirements: 3.1, 3.3, 3.4_
+  - [ ]* 3.2 编写属性测试：数据集 Round-Trip
+    - **Property 10: 数据集 Round-Trip**
+    - **Validates: Requirements 3.2, 10.2, 10.3**
+  - [ ] 3.3 创建数据集生成脚本
+    - 更新 `scripts/gen_dataset.sh`
+    - 支持命令行参数
+
+- [x] 4. 实现 EKF 滤波器
+  - [x] 4.1 实现固定参数 EKF (Step 9)
+    - 创建 `src/filters/ekf_fixed.py`
+    - 实现预测和更新步骤
+    - 使用四元数表示姿态
+    - _Requirements: 4.1, 4.2_
+  - [ ]* 4.2 编写属性测试：协方差正定性
+    - **Property 12: EKF 协方差正定性**
+    - **Validates: Requirements 4.1**
+  - [ ]* 4.3 编写属性测试：Baseline 模式参数不变性
+    - **Property 13: Baseline 模式参数不变性**
+    - **Validates: Requirements 4.2**
+  - [x] 4.4 实现自适应 EKF (Step 12 - 双通道版)
+    - 创建 `src/filters/ekf_adaptive.py`
+    - 实现新息驱动的噪声自适应
+    - 双通道检测：方向通道 + 幅值通道
+    - 组合 NIS = max(NIS_dir, NIS_mag * weight)
+    - 使用基准 R0 计算 NIS（避免负反馈循环）
+    - EWMA 平滑 + 软饱和
+    - _Requirements: 4.3_
+  - [ ]* 4.5 编写属性测试：自适应参数边界
+    - **Property 14: 自适应参数边界**
+    - **Validates: Requirements 4.3**
+  - [x] 4.6 实现滤波输出记录
+    - 记录状态、协方差、新息、NIS（方向/幅值/组合）、λ、R_acc
+    - _Requirements: 4.4, 4.5_
+  - [ ]* 4.7 编写属性测试：滤波输出长度一致性
+    - **Property 15: 滤波输出长度一致性**
+    - **Validates: Requirements 4.4, 4.5**
+  - [x] 4.8 创建滤波器验证脚本 (Step 12 验证)
+    - 创建 `scripts/test_ekf_adaptive.py`
+    - 验证振动/冲击工况下的自适应行为
+    - 验证因果一致性（NIS↑ → λ↑）
+
+- [ ] 5. Checkpoint - 确保所有测试通过
+  - 确保所有测试通过，如有问题请询问用户
+
+- [x] 6. 实现性能评估指标 (Step 7)
+  - [x] 6.1 实现姿态误差计算
+    - 创建 `src/metrics/tilt_error.py`
+    - 计算 roll/pitch/yaw 误差
+    - 支持 burn-in 时间
+    - _Requirements: 5.1_
+  - [ ]* 6.2 编写属性测试：零误差情况
+    - **Property 16: 零误差情况**
+    - **Validates: Requirements 5.1**
+  - [x] 6.3 实现 RMSE 计算
+    - 计算各轴 RMSE、bias、noise
+    - _Requirements: 5.2_
+  - [ ]* 6.4 编写属性测试：RMSE 非负性
+    - **Property 17: RMSE 非负性**
+    - **Validates: Requirements 5.2**
+  - [x] 6.5 实现 NIS 统计
+    - 创建 `src/metrics/consistency.py`
+    - 计算 NIS 均值、覆盖率、分位数
+    - 支持分段统计
+    - _Requirements: 5.3_
+  - [ ]* 6.6 编写属性测试：NIS 统计正确性
+    - **Property 18: NIS 统计正确性**
+    - **Validates: Requirements 5.3**
+  - [x] 6.7 实现收敛时间计算
+    - 计算误差首次进入阈值的时间
+    - _Requirements: 5.4_
+
+- [x] 7. 实现可视化模块 (Step 7)
+  - [x] 7.1 实现时间序列对比图
+    - 创建 `src/viz/plot_timeseries.py`
+    - 绘制真值 vs 估计
+    - _Requirements: 6.1_
+  - [x] 7.2 实现误差带图
+    - 绘制误差曲线和 3σ 边界
+    - _Requirements: 6.2_
+  - [x] 7.3 实现多滤波器对比图
+    - 绘制多个滤波器的对比
+    - _Requirements: 6.3_
+  - [ ] 7.4 实现自适应参数图
+    - 创建 `src/viz/plot_param_maps.py`
+    - 绘制 λ 和 R_acc 变化
+    - _Requirements: 6.4_
+
+- [ ] 8. Checkpoint - 确保所有测试通过
+  - 确保所有测试通过，如有问题请询问用户
+
+- [x] 9. 实现实验管理 (Step 8)
+  - [x] 9.1 实现单次实验运行
+    - 创建 `src/experiments/run_one.py`
+    - 整合数据生成 → 滤波 → 评估 → 可视化
+    - 支持 CLI 参数
+    - _Requirements: 7.1_
+  - [ ]* 9.2 编写属性测试：实验结果完整性
+    - **Property 19: 实验结果完整性**
+    - **Validates: Requirements 7.1, 7.2**
+  - [ ] 9.3 实现对比实验 (Step 13)
+    - 创建 `src/experiments/compare_baselines.py`
+    - 对比多种滤波器配置
+    - _Requirements: 7.2_
+  - [ ] 9.4 实现消融实验 (Step 13)
+    - 创建 `src/experiments/ablation.py`
+    - 逐一启用/禁用功能模块
+    - _Requirements: 7.3_
+  - [ ]* 9.5 编写属性测试：消融实验覆盖性
+    - **Property 20: 消融实验覆盖性**
+    - **Validates: Requirements 7.3**
+  - [ ] 9.6 实现敏感性分析 (Step 13)
+    - 创建 `src/experiments/sensitivity.py`
+    - 参数网格搜索
+    - _Requirements: 7.4_
+  - [ ]* 9.7 编写属性测试：敏感性分析覆盖性
+    - **Property 21: 敏感性分析覆盖性**
+    - **Validates: Requirements 7.4**
+
+- [ ] 10. 实现配置包导出
+  - [ ] 10.1 实现配置包生成
+    - 创建 `src/experiments/report.py`
+    - 生成 YAML 配置文件
+    - _Requirements: 8.1, 8.2, 8.3, 8.4_
+  - [ ]* 10.2 编写属性测试：配置包有效性
+    - **Property 22: 配置包有效性**
+    - **Validates: Requirements 8.1, 8.2, 8.3**
+
+- [ ] 11. 实现配置管理
+  - [ ] 11.1 实现配置加载器
+    - 创建 `src/common/io_utils.py`
+    - 解析和验证 YAML 配置
+    - _Requirements: 9.1, 9.4_
+  - [ ]* 11.2 编写属性测试：配置验证
+    - **Property 23: 配置验证**
+    - **Validates: Requirements 9.1, 9.4**
+  - [ ] 11.3 实现模块禁用机制
+    - 支持通过配置禁用功能模块
+    - _Requirements: 9.2_
+  - [ ]* 11.4 编写属性测试：模块禁用隔离性
+    - **Property 24: 模块禁用隔离性**
+    - **Validates: Requirements 9.2**
+  - [ ]* 11.5 编写属性测试：回归兼容性
+    - **Property 25: 回归兼容性**
+    - **Validates: Requirements 9.3**
+  - [ ]* 11.6 编写属性测试：YAML Round-Trip
+    - **Property 26: YAML Round-Trip**
+    - **Validates: Requirements 10.4**
+
+- [x] 12. 扩展工况库 (Step 10)
+  - [x] 12.1 实现加减速工况
+    - 在 `src/truth/scenarios.py` 添加 `generate_accel()`
+    - _Requirements: 1.1_
+  - [x] 12.2 实现转弯工况
+    - 添加 `generate_turn()`
+    - _Requirements: 1.1_
+  - [x] 12.3 实现振动工况
+    - 添加 `generate_vibration()`
+    - _Requirements: 1.1_
+  - [x] 12.4 实现冲击工况
+    - 添加 `generate_shock()`
+    - _Requirements: 1.1_
+  - [ ] 12.5 实现组合工况
+    - 添加 `generate_combo()`
+    - 支持多段拼接
+    - _Requirements: 1.1_
+
+- [ ] 13. Final Checkpoint - 确保所有测试通过
+  - 确保所有测试通过，如有问题请询问用户

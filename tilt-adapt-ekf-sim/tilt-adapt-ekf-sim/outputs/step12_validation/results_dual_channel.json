@@ -1,0 +1,55 @@
+{
+  "vibration": {
+    "rmse_fixed": 1.061526881047907,
+    "rmse_adaptive": 1.456285089601865,
+    "rmse_improvement_pct": -37.18777315975878,
+    "peak_fixed": 3.9119494907037056,
+    "peak_adaptive": 4.542057879719305,
+    "peak_change_pct": 16.107273125917885,
+    "lambda_saturation_ratio": 0.0006664445184938354,
+    "time_ratio_high_lambda": 0.20026657780739754,
+    "corr_NIS_lambda": 0.6188192878686051,
+    "nis_dir_mean": 828.096267895747,
+    "nis_mag_mean": 1.0318165082316242,
+    "nis_combined_mean": 828.0991351433732
+  },
+  "shock": {
+    "rmse_fixed": 0.14089761383923582,
+    "rmse_adaptive": 0.13989637831872884,
+    "lambda_recovered": 1.0,
+    "shock_stats": [
+      {
+        "time": 5.0,
+        "max_NIS_dir": 12.027900393522815,
+        "max_NIS_mag": 10022.61588789033,
+        "max_NIS_combined": 30067.84766367099,
+        "max_lambda": 50.0
+      },
+      {
+        "time": 10.0,
+        "max_NIS_dir": 9.974588595878862,
+        "max_NIS_mag": 10027.755056845412,
+        "max_NIS_combined": 30083.265170536237,
+        "max_lambda": 50.0
+      },
+      {
+        "time": 15.0,
+        "max_NIS_dir": 6.815078100169765,
+        "max_NIS_mag": 10001.539501365338,
+        "max_NIS_combined": 30004.61850409601,
+        "max_lambda": 50.0
+      }
+    ],
+    "nis_triggered": true,
+    "lambda_responded": true
+  },
+  "causality": {
+    "corr_NIS_lambda": -0.15124753354592882,
+    "lag_NIS_to_lambda": 28,
+    "lambda_mean_high_NIS": 19.78155503408876,
+    "lambda_mean_low_NIS": 1.0,
+    "lambda_correlation": 1.0,
+    "lambda_mean": 19.77249645331097,
+    "passed": false
+  }
+}
