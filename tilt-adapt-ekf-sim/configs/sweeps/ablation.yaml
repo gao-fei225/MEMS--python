@@ -1,16 +1,127 @@
-# Ablation Study Configuration
 # 消融实验配置
+# Step 13: 论文级验证
 
-ablation:
-  name: feature_ablation
-  base_config: configs/filters/ekf_adaptive_innovation.yaml
-  
-  features:
-    - name: adaptive_r
-      enabled: [true, false]
-    - name: adaptive_lambda
-      enabled: [true, false]
-    - name: bias_estimation
-      enabled: [true, false]
-    - name: gating
-      enabled: [true, false]
+# 基准配置
+baseline:
+  Q_gyro: 1.0e-5
+  Q_bias: 1.0e-8
+  R0: 3.5e-6
+  use_direction_meas: true
+
+# 消融实验列表
+ablations:
+  # A0: 自适应全功能 (baseline)
+  A0_full:
+    name: "Full Adaptive"
+    description: "完整自适应 EKF，Plan E inflate_R 机制"
+    enabled: true
+    config:
+      innovation_stat:
+        window_W: 30
+        nis_high: 7.815
+        nis_low: 3.0
+        ewma_alpha: 0.05
+      adaptation:
+        lambda_max: 200.0
+        lambda_min: 1.0
+        use_inflate_mapping: true
+        inflate_decay_rate: 0.8
+        inflate_rise_smooth: 1.0
+      dual_channel:
+        enabled: false
+
+  # A1: 关闭自适应 (退化为 ekf_fixed)
+  A1_fixed:
+    name: "Fixed EKF"
+    description: "固定 EKF，无自适应"
+    enabled: true
+    use_fixed_ekf: true
+    config:
+      R_acc: 3.5e-6
+      nis_gating:
+        enabled: false
+
+  # A2: 只做门限 (gating only)
+  A2_gating:
+    name: "Gating Only"
+    description: "只做门限拒绝，不膨胀 R"
+    enabled: true
+    use_fixed_ekf: true
+    config:
+      R_acc: 3.5e-6
+      nis_gating:
+        enabled: true
+        threshold: 7.815
+        mode: "reject"
+
+  # A3: 只做噪声膨胀
+  A3_inflate:
+    name: "Inflate Only"
+    description: "只做噪声膨胀，固定 EKF 的 inflate_R 模式"
+    enabled: true
+    use_fixed_ekf: true
+    config:
+      R_acc: 3.5e-6
+      nis_gating:
+        enabled: true
+        threshold: 7.815
+        mode: "inflate_R"
+
+  # A4: 窗口 W 扫描
+  A4_window_sweep:
+    name: "Window Sweep"
+    description: "窗口大小扫描"
+    enabled: true
+    sweep_param: "window_W"
+    sweep_values: [10, 20, 30, 50, 100]
+    base_config:
+      innovation_stat:
+        nis_high: 7.815
+        nis_low: 3.0
+        ewma_alpha: 0.05
+      adaptation:
+        lambda_max: 200.0
+        lambda_min: 1.0
+        use_inflate_mapping: true
+        inflate_decay_rate: 0.8
+
+  # A5: 阈值扫描
+  A5_threshold_sweep:
+    name: "Threshold Sweep"
+    description: "NIS 阈值扫描"
+    enabled: true
+    sweep_params:
+      nis_high: [5.0, 7.815, 10.0, 15.0]
+      nis_low: [1.0, 2.0, 3.0, 5.0]
+    base_config:
+      innovation_stat:
+        window_W: 30
+        ewma_alpha: 0.05
+      adaptation:
+        lambda_max: 200.0
+        lambda_min: 1.0
+        use_inflate_mapping: true
+        inflate_decay_rate: 0.8
+
+# 测试场景
+scenarios:
+  - name: "vibration"
+    description: "振动工况"
+    priority: 1
+  - name: "shock"
+    description: "冲击工况"
+    priority: 2
+  - name: "swing"
+    description: "摆动工况"
+    priority: 3
+
+# 评估指标
+metrics:
+  - rmse
+  - peak
+  - nis_mean
+  - nis_p95
+  - nis_coverage_95
+  - lambda_mean
+  - lambda_max
+  - lambda_saturation_ratio

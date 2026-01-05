@@ -306,8 +306,12 @@ class EKFAdaptive:
         - 当 NIS > threshold 时，λ = NIS / threshold（与固定 EKF 一致）
         
         改进：
-        1. 非对称响应：上升可平滑，下降更快
+        1. 非对称响应：上升直接跟随，下降可选衰减
         2. 可配置的衰减率和平滑因子
+        3. 当 NIS 低于阈值时，快速恢复到 λ=1（避免不必要的衰减）
+        
+        关键：为了保证一致性，λ 必须足够大使得自适应 NIS ≈ 3
+        自适应 NIS = 原始 NIS / λ，所以 λ ≈ 原始 NIS / 3
         """
         threshold = self.nis_high  # 使用 nis_high 作为阈值
         
@@ -315,6 +319,8 @@ class EKFAdaptive:
             lambda_target = self.lambda_min
         else:
             # 与固定 EKF 的 inflate_R 一致
+            # 为了使自适应 NIS ≈ 3，需要 λ = NIS / 3
+            # 但使用 threshold 作为分母可以提供更保守的估计
             lambda_target = nis / threshold
         
         # 限制最大值
@@ -322,16 +328,25 @@ class EKFAdaptive:
         
         self.lambda_raw = lambda_target
         
-        # 非对称响应：上升可平滑，下降更快
+        # 非对称响应：上升直接跟随，下降可选衰减
         if lambda_target > self.lambda_k:
-            # 上升：可选平滑
-            if self.inflate_rise_smooth < 1.0:
-                self.lambda_k = self.inflate_rise_smooth * lambda_target + (1 - self.inflate_rise_smooth) * self.lambda_k
-            else:
-                self.lambda_k = lambda_target
+            # 上升：直接跟随（快速响应）
+            self.lambda_k = lambda_target
         else:
-            # 下降：更快恢复（比固定 EKF 更激进地信任观测）
-            self.lambda_k = max(lambda_target, self.lambda_k * self.inflate_decay_rate)
+            # 下降逻辑改进：
+            # 1. 如果 NIS 低于阈值，快速恢复到 lambda_min（避免不必要的衰减）
+            # 2. 如果 NIS 高于阈值但在下降，使用衰减
+            if nis <= threshold:
+                # NIS 正常，快速恢复到 lambda_min
+                # 使用更快的衰减率，确保快速恢复
+                fast_decay = max(self.inflate_decay_rate, 0.8)
+                self.lambda_k = max(lambda_target, self.lambda_k * fast_decay)
+            else:
+                # NIS 仍然高于阈值，使用配置的衰减率
+                if self.inflate_decay_rate < 1.0:
+                    self.lambda_k = max(lambda_target, self.lambda_k * self.inflate_decay_rate)
+                else:
+                    self.lambda_k = lambda_target
         
         self.lambda_k = np.clip(self.lambda_k, self.lambda_min, self.lambda_max)
         self.R_acc = self.R0 * self.lambda_k

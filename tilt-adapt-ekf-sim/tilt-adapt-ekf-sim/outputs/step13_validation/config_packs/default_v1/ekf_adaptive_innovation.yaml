@@ -1,0 +1,24 @@
+# 自适应 EKF 推荐配置
+# 生成时间: 2026-01-05 10:54:26
+# 配置包: default_v1
+
+Q_gyro: 1e-05
+Q_bias: 1e-08
+R0: 3.5e-06
+use_direction_meas: True
+
+innovation_stat:
+  window_W: 30
+  nis_high: 7.815
+  nis_low: 3.0
+  ewma_alpha: 0.05
+
+adaptation:
+  lambda_max: 1000.0
+  lambda_min: 1.0
+  use_inflate_mapping: True
+  inflate_decay_rate: 0.9
+  inflate_rise_smooth: 1.0
+
+dual_channel:
+  enabled: False

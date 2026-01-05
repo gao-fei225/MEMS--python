@@ -1,23 +1,92 @@
-# Sensitivity Analysis Grid Configuration
-# 敏感性分析网格配置
+# 敏感性分析配置
+# Step 13: 论文级验证
 
-sensitivity:
-  name: param_sensitivity
+# 基准配置
+baseline:
+  Q_gyro: 1.0e-5
+  Q_bias: 1.0e-8
+  R0: 3.5e-6
+  use_direction_meas: true
+
+# 网格搜索参数
+grid_search:
+  # 窗口大小
+  window_W:
+    values: [10, 20, 30, 50, 100]
+    description: "NIS 统计窗口大小"
+    unit: "samples"
+    
+  # 高阈值
+  nis_high:
+    values: [5.0, 7.815, 10.0, 15.0, 20.0]
+    description: "NIS 高阈值（触发 λ 上升）"
+    unit: "χ²"
+    
+  # 衰减率
+  inflate_decay_rate:
+    values: [0.6, 0.7, 0.8, 0.9, 0.95]
+    description: "λ 下降衰减率"
+    unit: "-"
+    
+  # 最大膨胀因子
+  lambda_max:
+    values: [50.0, 100.0, 200.0, 500.0]
+    description: "最大 λ 值"
+    unit: "-"
+
+# 随机采样参数范围
+random_search:
+  n_samples: 100
+  seed: 42
   
-  parameters:
-    - name: process_noise.gyro_noise
-      range: [0.001, 0.1]
-      steps: 10
-      scale: log
-    - name: measurement_noise.accel_noise
-      range: [0.01, 1.0]
-      steps: 10
-      scale: log
-    - name: adaptive.window_size
-      range: [5, 50]
-      steps: 10
-      scale: linear
-    - name: adaptive.forgetting_factor
-      range: [0.8, 0.99]
-      steps: 10
-      scale: linear
+  param_ranges:
+    window_W:
+      min: 10
+      max: 100
+      type: int
+      
+    nis_high:
+      min: 3.0
+      max: 20.0
+      type: float
+      
+    inflate_decay_rate:
+      min: 0.5
+      max: 0.95
+      type: float
+      
+    lambda_max:
+      min: 50.0
+      max: 500.0
+      type: float
+
+# 性能门槛（用于筛选推荐参数）
+thresholds:
+  rmse_max: 2.0          # 最大允许 RMSE (°)
+  peak_max: 5.0          # 最大允许峰值误差 (°)
+  diverge_allowed: false # 是否允许发散
+  recovery_time_max: 1.0 # 最大恢复时间 (s)
+
+# 稳定性边界测试
+stability_boundary:
+  # 不同扰动强度
+  disturbance_levels:
+    vibration_rms: [0.1, 0.3, 0.5, 1.0, 2.0]
+    shock_peak: [10, 30, 50, 100, 200]
+    
+  # 每个扰动强度下的参数扫描
+  param_sweep:
+    inflate_decay_rate: [0.7, 0.8, 0.9]
+    lambda_max: [100.0, 200.0, 500.0]
+
+# 输出配置
+output:
+  save_all_results: true
+  save_recommended_only: false
+  plot_heatmaps: true
+  plot_pareto_front: true
+  
+# 测试场景
+scenarios:
+  primary: "vibration"    # 主要测试场景
+  secondary: ["shock", "swing"]  # 次要测试场景

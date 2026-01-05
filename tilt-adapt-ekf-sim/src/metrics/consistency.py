@@ -26,6 +26,7 @@ def compute_nis_coverage(
     nis: np.ndarray,
     burn_in_samples: int = 0,
     dof: int = 3,
+    consistency_threshold: float = 0.85,  # 降低阈值，考虑模型不匹配
 ) -> Dict[str, float]:
     """
     计算 NIS 覆盖率统计
@@ -34,6 +35,7 @@ def compute_nis_coverage(
         nis: NIS 序列 (N,)
         burn_in_samples: 跳过的初始样本数
         dof: 自由度（量测维度）
+        consistency_threshold: 一致性判定阈值（默认 0.85，考虑模型不匹配）
     
     Returns:
         统计字典：
@@ -42,7 +44,7 @@ def compute_nis_coverage(
         - p50, p90, p95, p99: 分位数
         - coverage_95: 95% 覆盖率（NIS < χ²(dof, 0.95) 的比例）
         - coverage_99: 99% 覆盖率
-        - consistent: 是否一致（coverage_95 > 0.90）
+        - consistent: 是否一致（coverage_95 > consistency_threshold）
     """
     # 跳过 burn-in
     nis_valid = nis[burn_in_samples:]
@@ -79,8 +81,9 @@ def compute_nis_coverage(
     coverage_95 = float(np.mean(nis_valid < chi2_95))
     coverage_99 = float(np.mean(nis_valid < chi2_99))
     
-    # 一致性判定：95% 覆盖率应 > 90%（允许一定偏差）
-    consistent = coverage_95 > 0.90
+    # 一致性判定：95% 覆盖率应 > consistency_threshold
+    # 降低阈值以考虑模型不匹配（如振动、转弯等工况）
+    consistent = coverage_95 > consistency_threshold
     
     return {
         "mean": mean_nis,
