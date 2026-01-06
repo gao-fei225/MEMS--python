@@ -77,6 +77,13 @@ CONFIGS = {
             "acc_window_size": 20, "vib_var_threshold": 0.05, "maneuver_mean_threshold": 0.4,
             "lambda_vibration": 100.0,
         },
+        # ZARU: 零角速度修正
+        "zaru": {
+            "enabled": True, "acc_std_threshold": 0.01, "gyro_threshold": 0.02,
+            "r_scale": 0.01, "q_att_scale": 0.001, "confirm_count": 10,
+        },
+        # LPF: 开启单向滤波（模拟实物延迟）
+        "lpf": {"enabled": True, "acc_cutoff": 15.0, "gyro_cutoff": 30.0, "use_filtfilt": False},
     },
     "A1_Fixed": {
         "Q_gyro": 1e-5, "Q_bias": 1e-8, "R_acc": 1e-4,

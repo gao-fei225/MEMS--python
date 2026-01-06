@@ -1,0 +1,81 @@
+{
+  "vibration": {
+    "rmse_fixed": 1.061526881047907,
+    "rmse_adaptive": 1.0414159842240445,
+    "rmse_improvement_pct": 1.894525440939349,
+    "peak_fixed": 3.911949490703685,
+    "peak_adaptive": 3.911949490703685,
+    "peak_change_pct": 0.0,
+    "lambda_saturation_ratio": 0.0773075641452849,
+    "time_ratio_high_lambda": 0.13228923692102632,
+    "corr_NIS_lambda": 0.9067665579595602,
+    "nis_dir_mean": 612.6130702789455,
+    "nis_mag_mean": 0.0,
+    "nis_combined_mean": 612.6130702789455
+  },
+  "shock": {
+    "rmse_fixed": 0.14089761383923585,
+    "rmse_adaptive": 0.13989637831872884,
+    "lambda_recovered": 1.0,
+    "shock_stats": [
+      {
+        "time": 5.0,
+        "max_NIS_dir": 12.027900393522815,
+        "max_NIS_mag": 10022.61588789033,
+        "max_NIS_combined": 30067.84766367099,
+        "max_lambda": 50.0
+      },
+      {
+        "time": 10.0,
+        "max_NIS_dir": 9.97458859587886,
+        "max_NIS_mag": 10027.755056845412,
+        "max_NIS_combined": 30083.265170536237,
+        "max_lambda": 50.0
+      },
+      {
+        "time": 15.0,
+        "max_NIS_dir": 6.815078100169763,
+        "max_NIS_mag": 10001.539501365338,
+        "max_NIS_combined": 30004.61850409601,
+        "max_lambda": 50.0
+      }
+    ],
+    "nis_triggered": true,
+    "lambda_responded": true
+  },
+  "causality": {
+    "corr_NIS_lambda": 0.6209961879377388,
+    "lag_NIS_to_lambda": 0,
+    "lambda_mean_high_NIS": 154.33919065062292,
+    "lambda_mean_low_NIS": 90.62890745881998,
+    "lambda_correlation": 1.0,
+    "lambda_mean": 154.02830574073656,
+    "passed": true
+  },
+  "swing": {
+    "rmse_fixed": 0.15361506687502186,
+    "rmse_adaptive": 0.15358936467046042,
+    "rmse_improvement_pct": 0.0167315648681457,
+    "peak_fixed": 0.29084567213078577,
+    "peak_adaptive": 0.29084567213078577,
+    "corr_NIS_lambda": 0.4901021678303242
+  },
+  "turn": {
+    "rmse_fixed": 13.429982627297118,
+    "rmse_adaptive": 13.418218934502274,
+    "rmse_improvement_pct": 0.08759276256198281,
+    "lambda_turn": 8.791418696942122,
+    "lambda_static": 26.174251155900958,
+    "nis_turn": 234.99197671347443,
+    "nis_static": 736.5262162030793
+  },
+  "accel": {
+    "rmse_fixed": 13.224630289200313,
+    "rmse_adaptive": 13.227874617954651,
+    "rmse_improvement_pct": -0.024532472238467263,
+    "peak_fixed": 27.071353458444033,
+    "peak_adaptive": 27.071353741187217,
+    "lambda_accel": 1.1485699587135778,
+    "lambda_static": 1.0109457146302883
+  }
+}

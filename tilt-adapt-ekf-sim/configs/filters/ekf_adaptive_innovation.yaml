@@ -69,3 +69,21 @@ adaptation:
 logging:
   save_nis: true
   save_lambda: true
+
+# ========== ZARU (Zero Angular Rate Update) 零角速度修正 ==========
+# 解决"久停必漂"问题：静止时快速估计陀螺仪 Bias
+zaru:
+  enabled: true
+  acc_std_threshold: 0.01    # 加速度方差阈值 (m/s²)
+  gyro_threshold: 0.02       # 陀螺仪阈值 (rad/s)
+  r_scale: 0.01              # 静止时 R 缩放因子（极度信任加速度计）
+  q_att_scale: 0.001         # 静止时角度 Q 缩放（角度不变，Bias 快速收敛）
+  confirm_count: 10          # 确认静止需要的帧数
+
+# ========== LPF 数字低通滤波预处理 ==========
+# 滤除高频机械共振噪声
+lpf:
+  enabled: false             # 默认关闭，需要时开启
+  acc_cutoff: 15.0           # 加速度计截止频率 (Hz)
+  gyro_cutoff: 30.0          # 陀螺仪截止频率 (Hz)
+  use_filtfilt: false        # false=单向滤波(模拟实物延迟), true=零相位(仿真)

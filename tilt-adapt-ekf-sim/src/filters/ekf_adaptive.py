@@ -1,21 +1,18 @@
 """
-自适应 EKF (Adaptive Extended Kalman Filter) - 双通道版
+自适应 EKF (Adaptive Extended Kalman Filter) - 工业级版本
 
-Step 12：基于新息统计的自适应更新律
-
-核心改进：
+核心功能：
 1. 双通道检测：方向偏差 + 幅值偏差
-2. 方向通道：检测姿态变化引起的方向偏差
-3. 幅值通道：检测非重力加速度（冲击/振动）
-4. 综合 NIS = max(NIS_dir, NIS_mag) 或加权组合
-5. 使用基准 R0 计算 NIS（避免负反馈循环）
-6. Plan A: λ EWMA 平滑和延迟响应
-7. Plan C: 振动感知策略
+2. NIS + M-Estimation 连续权重函数
+3. 振动/机动解耦检测
+4. ZARU (Zero Angular Rate Update) 零角速度修正
+5. LPF 数字低通滤波预处理
 """
 
 import numpy as np
 from typing import Dict, Any, Tuple
 from collections import deque
+from scipy import signal
 
 from ..common.math3d import (
     quat_normalize,
@@ -28,6 +25,36 @@ from ..common.math3d import (
 
 GRAVITY = 9.80665
 CHI2_3_95 = 7.815
+
+
+# ========== LPF 低通滤波器 ==========
+def apply_lpf(data: np.ndarray, fs: float = 100.0, cutoff: float = 20.0, 
+              use_filtfilt: bool = False) -> np.ndarray:
+    """
+    数字低通滤波器 (2阶 Butterworth)
+    
+    Args:
+        data: 输入数据 (N, 3)
+        fs: 采样频率 (Hz)
+        cutoff: 截止频率 (Hz)
+        use_filtfilt: True=零相位(仿真), False=单向(实物)
+    
+    Returns:
+        滤波后的数据
+    """
+    nyq = 0.5 * fs
+    normalized_cutoff = cutoff / nyq
+    # 防止截止频率超过奈奎斯特频率
+    normalized_cutoff = min(normalized_cutoff, 0.99)
+    
+    b, a = signal.butter(2, normalized_cutoff, btype='low', analog=False)
+    
+    if use_filtfilt:
+        # 零相位滤波 (仿真用，无延迟)
+        return signal.filtfilt(b, a, data, axis=0)
+    else:
+        # 单向滤波 (实物用，有延迟)
+        return signal.lfilter(b, a, data, axis=0)
 
 
 def quat_omega_matrix(omega: np.ndarray) -> np.ndarray:
@@ -134,6 +161,17 @@ class EKFAdaptive:
         self.R_acc = self.R0
         self.nis_ewma = 3.0
         self.nis_window = deque(maxlen=self.window_W)
+        
+        # ========== ZARU (Zero Angular Rate Update) 配置 ==========
+        zaru_cfg = cfg.get("zaru", {})
+        self.use_zaru = zaru_cfg.get("enabled", True)
+        self.zaru_acc_std_threshold = zaru_cfg.get("acc_std_threshold", 0.01)  # 加速度方差阈值
+        self.zaru_gyro_threshold = zaru_cfg.get("gyro_threshold", 0.02)  # 陀螺仪阈值 (rad/s)
+        self.zaru_r_scale = zaru_cfg.get("r_scale", 0.01)  # 静止时 R 缩放因子
+        self.zaru_q_att_scale = zaru_cfg.get("q_att_scale", 0.001)  # 静止时角度 Q 缩放
+        self._is_static = False  # 静止状态标志
+        self._static_counter = 0  # 静止计数器
+        self._static_confirm_count = zaru_cfg.get("confirm_count", 10)  # 确认静止需要的帧数
 
     def predict(self, gyro: np.ndarray, dt: float) -> None:
         omega = gyro - self.b_g
@@ -144,9 +182,15 @@ class EKFAdaptive:
         F[0:3, 0:3] = np.eye(3) - omega_skew * dt
         F[0:3, 3:6] = -np.eye(3) * dt
         
+        # ZARU: 静止时降低角度 Q，让 Bias 更快收敛
         Q = np.zeros((6, 6), dtype=np.float64)
-        Q[0:3, 0:3] = np.eye(3) * self.Q_gyro * dt
-        Q[3:6, 3:6] = np.eye(3) * self.Q_bias * dt
+        if self._is_static and self.use_zaru:
+            # 静止时：角度预测几乎没噪声，Bias 保持正常
+            Q[0:3, 0:3] = np.eye(3) * self.Q_gyro * dt * self.zaru_q_att_scale
+            Q[3:6, 3:6] = np.eye(3) * self.Q_bias * dt
+        else:
+            Q[0:3, 0:3] = np.eye(3) * self.Q_gyro * dt
+            Q[3:6, 3:6] = np.eye(3) * self.Q_bias * dt
         
         self.P = F @ self.P @ F.T + Q
     
@@ -456,68 +500,124 @@ class EKFAdaptive:
 
     def _adapt_lambda_dynamic_aware(self, nis_dir: float, acc: np.ndarray, gyro: np.ndarray) -> None:
         """
-        Plan H: 动态感知策略（终极版 - 滑动窗口方差检测）
+        Plan I: 工业级 Robust Adaptive Kalman Filter (RAKF)
         
-        核心改进：
-        - 用EWMA滤波后的均值偏差检测机动（持续的直流偏移）
-        - 用滑动窗口方差检测振动（高频抖动）
-        - 振动时使用中等λ，机动时使用极大λ
+        核心升级（对标 PX4/ArduPilot 和学术论文）：
+        1. 用真正的 NIS (χ² 检验) 替代绝对误差阈值
+        2. 用连续的 M-Estimation (Huber/IGG-III) 权重函数替代硬开关
+        3. 保留滑动窗口方差检测振动的逻辑
+        
+        优点：
+        - 自适应不确定性：考虑当前协方差 P，系统不确定时容忍更大误差
+        - 平滑过渡：消除阈值跳变噪声，λ 连续变化
+        - 解耦振动与机动：独立的检测通道
         """
-        threshold = self.nis_high
+        # ========== 参数配置 ==========
+        th_maneuver_nis = 6.0   # 机动检测 NIS 阈值 (对应 ~2.5σ)
+        th_vibration_std = self._vib_var_threshold  # 振动方差阈值
+        k0 = 3.0   # Huber 函数下界 (正常区)
+        k1 = 15.0  # Huber 函数上界 (强抗扰区)
         
-        # 1. NIS 通道
-        if nis_dir <= threshold:
-            lambda_nis = self.lambda_min
-        else:
-            lambda_nis = nis_dir / threshold
-        
-        # 2. 更新加速度缓冲区和EWMA
+        # ========== 1. 更新加速度缓冲区 ==========
         self._acc_buffer.append(acc.copy())
         self._acc_vec_ewma = (self._acc_vec_alpha * acc + 
                              (1 - self._acc_vec_alpha) * self._acc_vec_ewma)
         
-        # 3. 计算EWMA滤波后的均值偏差（检测机动）
+        # ========== 2. 计算滑动窗口方差（振动检测） ==========
+        acc_std = 0.0
+        if len(self._acc_buffer) >= 5:
+            acc_array = np.array(self._acc_buffer)
+            acc_std = np.max(np.std(acc_array, axis=0))
+        
+        # ========== 3. 核心自适应逻辑 (NIS + M-Estimation) ==========
+        lambda_factor = 1.0
+        
+        # 计算幅值偏差（用于后续判断）
         acc_norm_smoothed = np.linalg.norm(self._acc_vec_ewma)
         mag_error_smoothed = abs(acc_norm_smoothed - GRAVITY)
         
-        # 4. 计算滑动窗口方差（检测振动）
-        is_vibration = False
-        if len(self._acc_buffer) >= 5:
-            acc_array = np.array(self._acc_buffer)
-            acc_std = np.std(acc_array, axis=0)
-            max_std = np.max(acc_std)
-            is_vibration = max_std > self._vib_var_threshold
-        
-        # 5. 状态判定和λ计算
-        # 关键逻辑：振动检测优先级高于机动检测
-        # 因为振动时EWMA均值偏差也可能较大（噪声整流效应）
-        if is_vibration and mag_error_smoothed < self._maneuver_mean_threshold:
-            # 纯振动：方差大但EWMA均值偏差不太大
-            lambda_mag = self._lambda_vibration
-        elif mag_error_smoothed <= self.mag_threshold:
-            # 静态
-            lambda_mag = self.lambda_min
-        else:
-            # 机动：EWMA均值偏差大
-            excess = (mag_error_smoothed - self.mag_threshold) / self.mag_threshold
-            lambda_mag = self.lambda_min + self.mag_lambda_gain * (excess ** 1.5)
-        
-        # 6. 角速度通道（增强机动检测，但不在振动时应用）
+        # 计算角速度（用于区分振动和转弯）
         gyro_norm = np.linalg.norm(gyro)
         self._gyro_norm_ewma = (self._dynamic_alpha * gyro_norm + 
                                (1 - self._dynamic_alpha) * self._gyro_norm_ewma)
         
+        # 振动判定：方差大 + 角速度小
+        # 转弯时角速度大，不应判定为振动
+        # 放宽均值偏差限制，因为振动时噪声整流效应会导致均值偏差
+        is_vibration = (acc_std > th_vibration_std and 
+                       self._gyro_norm_ewma < self.gyro_threshold * 3.0)
+        
+        # A. 振动模式 (Vibration Mode)
+        # 判据: 方差大 (高频抖动)，角速度小，均值偏差不大
+        if is_vibration:
+            # 策略: 软抑制，使用适度的 λ（模仿 A4 的 100）
+            # 不要随 NIS 增加太多，避免过度拒绝
+            lambda_factor = self._lambda_vibration
+        
+        # B. 机动模式 (Maneuver Mode) - 基于 NIS 的 M-Estimation
+        # 判据: NIS 超过统计学阈值
+        elif nis_dir > th_maneuver_nis:
+            # 策略: IGG-III / Huber-like 连续权重函数
+            # 分段线性 + 指数，实现平滑切断
+            if nis_dir <= k1:
+                # 线性区: λ = NIS / k0 (与 inflate 一致)
+                lambda_factor = nis_dir / k0
+            else:
+                # 指数区: 快速拉升，实现"软切断"
+                # 当 NIS=15 时 factor≈5; NIS=25 时 factor≈~22000
+                exp_arg = min(nis_dir - k1, 20.0)  # 限制指数参数防止溢出
+                lambda_factor = (k1 / k0) * np.exp(exp_arg)
+            
+            # 封顶防止数值溢出
+            if lambda_factor > self.lambda_max:
+                lambda_factor = self.lambda_max
+        
+        # C. 稳态 (Static/Normal)
+        else:
+            lambda_factor = self.lambda_min
+        
+        # ========== 4. 幅值通道增强（检测缓慢加速） ==========
+        # NIS 可能被"欺骗"（滤波器跟上了错误值），用幅值偏差兜底
+        # 注意：振动模式下跳过此通道，避免覆盖振动的适度 λ
+        is_vibration = acc_std > th_vibration_std
+        acc_norm_smoothed = np.linalg.norm(self._acc_vec_ewma)
+        mag_error_smoothed = abs(acc_norm_smoothed - GRAVITY)
+        
+        if not is_vibration and mag_error_smoothed > self.mag_threshold:
+            # 幅值偏差大，说明存在线性加速度
+            # 使用连续函数：λ_mag = 1 + gain * (error/threshold)^1.5
+            excess = (mag_error_smoothed - self.mag_threshold) / self.mag_threshold
+            lambda_mag = self.lambda_min + self.mag_lambda_gain * (excess ** 1.5)
+            lambda_factor = max(lambda_factor, lambda_mag)
+        
+        # ========== 5. 角速度通道（增强转弯检测） ==========
         if self._gyro_norm_ewma > self.gyro_threshold and not is_vibration:
+            # 转弯时增强抑制（但振动时不应用，避免误判）
             gyro_factor = 1.0 + (self._gyro_norm_ewma / self.gyro_threshold - 1.0) ** 2
-            lambda_mag = lambda_mag * gyro_factor
+            lambda_factor = lambda_factor * gyro_factor
         
-        # 取最大值
-        lambda_target = max(lambda_nis, lambda_mag)
-        lambda_target = min(lambda_target, self.lambda_max)
+        # ========== 6. ZARU 静止检测 ==========
+        gyro_norm_raw = np.linalg.norm(gyro)
+        is_static_candidate = (acc_std < self.zaru_acc_std_threshold and 
+                               gyro_norm_raw < self.zaru_gyro_threshold)
         
+        if is_static_candidate:
+            self._static_counter += 1
+            if self._static_counter >= self._static_confirm_count:
+                self._is_static = True
+        else:
+            self._static_counter = 0
+            self._is_static = False
+        
+        # ZARU: 静止时极度信任加速度计
+        if self._is_static and self.use_zaru:
+            lambda_factor = self.zaru_r_scale  # R 缩小，极度信任观测
+        
+        # ========== 7. 限幅和平滑 ==========
+        lambda_target = np.clip(lambda_factor, self.lambda_min, self.lambda_max)
         self.lambda_raw = lambda_target
         
-        # 非对称响应
+        # 非对称响应：上升快，下降慢
         if lambda_target > self.lambda_k:
             self.lambda_k = lambda_target
         else:
@@ -552,10 +652,25 @@ class EKFAdaptive:
 
 
 def run_ekf_adaptive(ds: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, Any]:
-    acc = ds["meas"]["acc"]
-    gyro = ds["meas"]["gyro"]
+    acc_raw = ds["meas"]["acc"]
+    gyro_raw = ds["meas"]["gyro"]
     fs = ds["meta"]["fs"]
     dt = 1.0 / fs
+    
+    # ========== LPF 预处理 ==========
+    lpf_cfg = cfg.get("lpf", {})
+    use_lpf = lpf_cfg.get("enabled", False)
+    
+    if use_lpf:
+        acc_cutoff = lpf_cfg.get("acc_cutoff", 15.0)  # 加速度计截止频率
+        gyro_cutoff = lpf_cfg.get("gyro_cutoff", 30.0)  # 陀螺仪截止频率
+        use_filtfilt = lpf_cfg.get("use_filtfilt", False)  # False=模拟实物延迟
+        
+        acc = apply_lpf(acc_raw, fs, acc_cutoff, use_filtfilt)
+        gyro = apply_lpf(gyro_raw, fs, gyro_cutoff, use_filtfilt)
+    else:
+        acc = acc_raw
+        gyro = gyro_raw
     
     n_samples = len(acc)
     ekf = EKFAdaptive(cfg)
