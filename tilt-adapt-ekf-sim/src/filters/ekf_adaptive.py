@@ -96,6 +96,21 @@ class EKFAdaptive:
         self._gyro_norm_ewma = 0.0  # 角速度幅值的 EWMA
         self._dynamic_alpha = adapt_cfg.get("dynamic_alpha", 0.1)  # EWMA 平滑因子
         
+        # Plan G+: 加速度矢量平滑（解决振动场景的噪声整流效应）
+        self._acc_vec_ewma = np.array([0.0, 0.0, GRAVITY], dtype=np.float64)
+        self._acc_vec_alpha = adapt_cfg.get("acc_vec_alpha", 0.1)  # 矢量滤波系数
+        
+        # Plan G++: 振动检测（区分振动和机动）
+        self._acc_var_ewma = 0.0  # 加速度方差的 EWMA（用于检测振动）
+        self._vib_threshold = adapt_cfg.get("vib_threshold", 0.1)  # 振动检测阈值
+        
+        # Plan H: 滑动窗口方差-均值检测（终极版）
+        self._acc_window_size = adapt_cfg.get("acc_window_size", 20)  # 滑动窗口大小
+        self._acc_buffer = deque(maxlen=self._acc_window_size)  # 加速度缓冲区
+        self._vib_var_threshold = adapt_cfg.get("vib_var_threshold", 0.1)  # 振动方差阈值
+        self._maneuver_mean_threshold = adapt_cfg.get("maneuver_mean_threshold", 0.2)  # 机动均值阈值
+        self._lambda_vibration = adapt_cfg.get("lambda_vibration", 100.0)  # 振动时的λ（模仿A4）
+        
         dual_cfg = cfg.get("dual_channel", {})
         self.use_dual_channel = dual_cfg.get("enabled", True)
         self.mag_weight = dual_cfg.get("mag_weight", 1.0)
@@ -441,52 +456,58 @@ class EKFAdaptive:
 
     def _adapt_lambda_dynamic_aware(self, nis_dir: float, acc: np.ndarray, gyro: np.ndarray) -> None:
         """
-        Plan G: 动态感知策略（针对转弯/加减速优化）
+        Plan H: 动态感知策略（终极版 - 滑动窗口方差检测）
         
-        核心思想：
-        1. 检测持续的线性加速度（通过加速度幅值偏离 g）
-        2. 检测角速度（转弯时角速度较大）
-        3. 当检测到动态运动时，更激进地降低对加速度观测的信任
-        
-        λ = max(λ_nis, λ_mag, λ_gyro)
-        - λ_nis: 基于 NIS 的 inflate 映射
-        - λ_mag: 基于加速度幅值偏差
-        - λ_gyro: 基于角速度幅值（可选）
+        核心改进：
+        - 用EWMA滤波后的均值偏差检测机动（持续的直流偏移）
+        - 用滑动窗口方差检测振动（高频抖动）
+        - 振动时使用中等λ，机动时使用极大λ
         """
         threshold = self.nis_high
         
-        # 1. NIS 通道：与 inflate 一致
+        # 1. NIS 通道
         if nis_dir <= threshold:
             lambda_nis = self.lambda_min
         else:
             lambda_nis = nis_dir / threshold
         
-        # 2. 幅值通道：检测线性加速度
-        acc_norm = np.linalg.norm(acc)
-        mag_error = abs(acc_norm - GRAVITY)
+        # 2. 更新加速度缓冲区和EWMA
+        self._acc_buffer.append(acc.copy())
+        self._acc_vec_ewma = (self._acc_vec_alpha * acc + 
+                             (1 - self._acc_vec_alpha) * self._acc_vec_ewma)
         
-        # 使用 EWMA 平滑幅值偏差，避免瞬时噪声
-        self._mag_error_ewma = (self._dynamic_alpha * mag_error + 
-                               (1 - self._dynamic_alpha) * self._mag_error_ewma)
+        # 3. 计算EWMA滤波后的均值偏差（检测机动）
+        acc_norm_smoothed = np.linalg.norm(self._acc_vec_ewma)
+        mag_error_smoothed = abs(acc_norm_smoothed - GRAVITY)
         
-        # 幅值偏差映射到 λ
-        if self._mag_error_ewma <= self.mag_threshold:
+        # 4. 计算滑动窗口方差（检测振动）
+        is_vibration = False
+        if len(self._acc_buffer) >= 5:
+            acc_array = np.array(self._acc_buffer)
+            acc_std = np.std(acc_array, axis=0)
+            max_std = np.max(acc_std)
+            is_vibration = max_std > self._vib_var_threshold
+        
+        # 5. 状态判定和λ计算
+        # 关键逻辑：振动检测优先级高于机动检测
+        # 因为振动时EWMA均值偏差也可能较大（噪声整流效应）
+        if is_vibration and mag_error_smoothed < self._maneuver_mean_threshold:
+            # 纯振动：方差大但EWMA均值偏差不太大
+            lambda_mag = self._lambda_vibration
+        elif mag_error_smoothed <= self.mag_threshold:
+            # 静态
             lambda_mag = self.lambda_min
         else:
-            # 使用平方关系：偏差越大，λ 增长越快
-            # 0.5 m/s² → λ ≈ 3.8, 1.0 m/s² → λ ≈ 12.1
-            excess = (self._mag_error_ewma - self.mag_threshold) / self.mag_threshold
+            # 机动：EWMA均值偏差大
+            excess = (mag_error_smoothed - self.mag_threshold) / self.mag_threshold
             lambda_mag = self.lambda_min + self.mag_lambda_gain * (excess ** 1.5)
         
-        # 3. 角速度通道：检测转弯（可选）
+        # 6. 角速度通道（增强机动检测，但不在振动时应用）
         gyro_norm = np.linalg.norm(gyro)
         self._gyro_norm_ewma = (self._dynamic_alpha * gyro_norm + 
                                (1 - self._dynamic_alpha) * self._gyro_norm_ewma)
         
-        # 当角速度较大时，说明在转弯，此时加速度包含向心加速度
-        if self._gyro_norm_ewma > self.gyro_threshold:
-            # 角速度越大，向心加速度越大，应该更不信任加速度观测
-            # 向心加速度 = ω² * r，但我们不知道 r，所以用 ω 作为代理
+        if self._gyro_norm_ewma > self.gyro_threshold and not is_vibration:
             gyro_factor = 1.0 + (self._gyro_norm_ewma / self.gyro_threshold - 1.0) ** 2
             lambda_mag = lambda_mag * gyro_factor
         
@@ -496,14 +517,10 @@ class EKFAdaptive:
         
         self.lambda_raw = lambda_target
         
-        # 非对称响应：快速上升，较快下降
+        # 非对称响应
         if lambda_target > self.lambda_k:
-            if self.inflate_rise_smooth < 1.0:
-                self.lambda_k = self.inflate_rise_smooth * lambda_target + (1 - self.inflate_rise_smooth) * self.lambda_k
-            else:
-                self.lambda_k = lambda_target
+            self.lambda_k = lambda_target
         else:
-            # 下降时使用更快的衰减
             self.lambda_k = max(lambda_target, self.lambda_k * self.inflate_decay_rate)
         
         self.lambda_k = np.clip(self.lambda_k, self.lambda_min, self.lambda_max)

@@ -66,26 +66,41 @@ def compute_metrics(
 
 
 def run_ablation_a0_full(ds: Dict[str, Any]) -> Dict[str, Any]:
-    """A0: 自适应全功能 (baseline)"""
+    """A0: 自适应全功能 (baseline) - 优化后的配置"""
     cfg = {
         "Q_gyro": 1e-5,
         "Q_bias": 1e-8,
-        "R0": 2e-6,  # 标定后的值，使静态 NIS 均值 ≈ 3
+        "R0": 1e-4,
         "use_direction_meas": True,
         "innovation_stat": {
-            "window_W": 30,
-            "nis_high": 15.0,  # 保守阈值，确保所有场景 >= 固定 EKF
-            "nis_low": 3.0,
-            "ewma_alpha": 0.05,
+            "window_W": 50,
+            "nis_high": 7.8,
+            "nis_low": 2.0,
+            "ewma_alpha": 0.15,
+        },
+        "dual_channel": {
+            "enabled": True,
+            "mag_weight": 50.0,
+            "mag_sigma": 0.05,
+            "combine_mode": "max",
+            "vibration_aware": False,
         },
         "adaptation": {
-            "lambda_max": 100.0,
+            "r_up": 2.0,
+            "r_down": 0.95,
+            "lambda_max": 100000.0,
             "lambda_min": 1.0,
             "use_inflate_mapping": True,
-            "inflate_decay_rate": 0.9,
+            "inflate_decay_rate": 0.92,
             "inflate_rise_smooth": 1.0,
+            "use_dynamic_aware": True,
+            "mag_threshold": 0.1,
+            "mag_lambda_gain": 5000.0,
+            "gyro_threshold": 0.05,
+            "dynamic_alpha": 0.3,
+            "soft_saturation": False,
+            "ewma_lambda_alpha": 0.0,
         },
-        "dual_channel": {"enabled": False},
     }
     return run_ekf_adaptive(ds, cfg), cfg
 

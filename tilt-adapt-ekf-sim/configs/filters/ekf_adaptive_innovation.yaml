@@ -1,12 +1,13 @@
 # 自适应 EKF 配置 - 基于新息统计
 # Step 12: Innovation-based Adaptive EKF
+# 修复版：启用双通道检测 + 动态感知策略
 
 # 过程噪声
 Q_gyro: 1.0e-5      # 陀螺仪噪声功率谱密度 (rad/s)^2/Hz
 Q_bias: 1.0e-8      # 偏置随机游走功率谱密度 (rad/s)^2/Hz
 
 # 基准测量噪声（方向量测）
-R0: 3.5e-6          # 基准测量噪声方差
+R0: 1.0e-4          # 基准测量噪声方差（增大以让 λ 更有效）
 
 # 方向量测开关
 use_direction_meas: true
@@ -18,15 +19,51 @@ init_P_bias: 1.0e-4 # (0.01 rad/s)^2
 # 新息统计配置
 innovation_stat:
   window_W: 50      # 滑窗大小
-  nis_high: 10.0    # NIS 上阈值（超过则增大 λ）
+  nis_high: 7.8     # NIS 上阈值（χ²(3,0.95)=7.815）
   nis_low: 2.0      # NIS 下阈值（低于则减小 λ）
+  ewma_alpha: 0.15  # NIS EWMA 平滑因子
 
-# 自适应参数
+# ========== 关键修复：双通道检测 ==========
+# 这是解决 Accel/Turn 场景误差的核心！
+dual_channel:
+  enabled: true           # 必须开启！
+  mag_weight: 50.0        # 幅值通道权重（疯狗模式：大幅增加）
+  mag_sigma: 0.05         # 关键参数！进一步降低使检测更敏感
+  combine_mode: "max"     # 取 NIS_dir 和 NIS_mag 的最大值
+  vibration_aware: false  # 振动感知（可选）
+
+# ========== 自适应参数 ==========
 adaptation:
-  r_up: 1.2         # λ 上升因子
-  r_down: 0.98      # λ 下降因子
-  lambda_max: 100.0 # λ 最大值
-  lambda_min: 1.0   # λ 最小值
+  r_up: 2.0               # λ 上升因子
+  r_down: 0.95            # λ 下降因子
+  lambda_max: 100000.0    # λ 最大值（疯狗模式：极大上限）
+  lambda_min: 1.0         # λ 最小值
+  
+  # Plan E: inflate 映射（推荐）
+  use_inflate_mapping: true
+  inflate_decay_rate: 0.92    # 下降衰减率
+  inflate_rise_smooth: 1.0    # 上升平滑因子 (1.0=直接跟随)
+  
+  # Plan G++: 动态感知策略（终极版 - 区分振动和机动）
+  use_dynamic_aware: true     # 开启动态感知！
+  mag_threshold: 0.1          # 幅值偏差阈值 (m/s²)
+  mag_lambda_gain: 5000.0     # 极大增益
+  gyro_threshold: 0.05        # 角速度阈值 (rad/s)
+  dynamic_alpha: 0.3          # EWMA 平滑因子
+  acc_vec_alpha: 0.1          # 矢量滤波系数
+  vib_threshold: 0.05         # 振动检测阈值
+  # Plan H: 滑动窗口方差检测（区分振动和机动）
+  acc_window_size: 20         # 滑动窗口大小
+  vib_var_threshold: 0.05     # 振动方差阈值
+  maneuver_mean_threshold: 0.4  # 机动均值阈值
+  lambda_vibration: 100.0     # 振动时的λ（模仿A4）
+  
+  # 软饱和（可选）
+  soft_saturation: false
+  lambda_soft_max: 50.0
+  
+  # EWMA 平滑（可选）
+  ewma_lambda_alpha: 0.0      # 0 表示不使用额外平滑
 
 # 日志配置
 logging:
