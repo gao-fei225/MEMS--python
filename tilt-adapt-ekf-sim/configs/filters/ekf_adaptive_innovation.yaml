@@ -7,7 +7,8 @@ Q_gyro: 1.0e-5      # 陀螺仪噪声功率谱密度 (rad/s)^2/Hz
 Q_bias: 1.0e-8      # 偏置随机游走功率谱密度 (rad/s)^2/Hz
 
 # 基准测量噪声（方向量测）
-R0: 1.0e-4          # 基准测量噪声方差（增大以让 λ 更有效）
+# DE优化结果: R0 = 0.000549
+R0: 5.49e-4         # 基准测量噪声方差（DE优化值）
 
 # 方向量测开关
 use_direction_meas: true
@@ -19,7 +20,7 @@ init_P_bias: 1.0e-4 # (0.01 rad/s)^2
 # 新息统计配置
 innovation_stat:
   window_W: 50      # 滑窗大小
-  nis_high: 7.8     # NIS 上阈值（χ²(3,0.95)=7.815）
+  nis_high: 8.54    # NIS 上阈值（DE优化值）
   nis_low: 2.0      # NIS 下阈值（低于则减小 λ）
   ewma_alpha: 0.15  # NIS EWMA 平滑因子
 
@@ -54,9 +55,9 @@ adaptation:
   vib_threshold: 0.05         # 振动检测阈值
   # Plan H: 滑动窗口方差检测（区分振动和机动）
   acc_window_size: 20         # 滑动窗口大小
-  vib_var_threshold: 0.05     # 振动方差阈值
+  vib_var_threshold: 0.06     # 振动方差阈值（DE优化值: ~0.0595）
   maneuver_mean_threshold: 0.4  # 机动均值阈值
-  lambda_vibration: 100.0     # 振动时的λ（模仿A4）
+  lambda_vibration: 200.0     # 振动时的λ（DE优化值: 强力抗震）
   
   # 软饱和（可选）
   soft_saturation: false

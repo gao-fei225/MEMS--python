@@ -182,9 +182,9 @@ def optimize():
         objective,
         bounds,
         strategy='best1bin',
-        maxiter=15,      # 减少迭代次数加速测试
-        popsize=6,       # 减少种群大小
-        tol=0.005,       # 收敛容差
+        maxiter=8,       # 快速测试
+        popsize=5,       # 小种群
+        tol=0.01,        # 收敛容差
         mutation=(0.5, 1.0),
         recombination=0.7,
         disp=True,       # 显示进度

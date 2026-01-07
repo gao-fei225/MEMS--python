@@ -61,44 +61,45 @@ def compute_metrics(est, roll_true, pitch_true, burn_in=100):
     }
 
 
-# 配置定义
+# 配置定义 - 使用 DE 优化后的最终参数
 CONFIGS = {
     "A0_Optimized": {
-        "Q_gyro": 1e-5, "Q_bias": 1e-8, "R0": 1e-4,
+        # ========== DE 优化后的最终参数 (Average RMSE = 0.7364°) ==========
+        "Q_gyro": 1e-5, "Q_bias": 1e-8, "R0": 5.49e-4,  # DE优化值
         "use_direction_meas": True,
-        "innovation_stat": {"window_W": 50, "nis_high": 7.8, "nis_low": 2.0, "ewma_alpha": 0.15},
+        "innovation_stat": {"window_W": 50, "nis_high": 8.54, "nis_low": 2.0, "ewma_alpha": 0.15},  # DE优化值
         "dual_channel": {"enabled": True, "mag_weight": 50.0, "mag_sigma": 0.05, "combine_mode": "max"},
         "adaptation": {
             "r_up": 2.0, "r_down": 0.95, "lambda_max": 100000.0, "lambda_min": 1.0,
             "use_inflate_mapping": True, "inflate_decay_rate": 0.92, "inflate_rise_smooth": 1.0,
             "use_dynamic_aware": True, "mag_threshold": 0.1, "mag_lambda_gain": 5000.0,
             "gyro_threshold": 0.05, "dynamic_alpha": 0.3, "acc_vec_alpha": 0.1, "vib_threshold": 0.05,
-            # Plan H: 滑动窗口方差检测
-            "acc_window_size": 20, "vib_var_threshold": 0.05, "maneuver_mean_threshold": 0.4,
-            "lambda_vibration": 100.0,
+            # Plan H: 滑动窗口方差检测 (DE优化值)
+            "acc_window_size": 20, "vib_var_threshold": 0.06, "maneuver_mean_threshold": 0.4,
+            "lambda_vibration": 200.0,  # DE优化值
         },
         # ZARU: 零角速度修正
         "zaru": {
             "enabled": True, "acc_std_threshold": 0.01, "gyro_threshold": 0.02,
             "r_scale": 0.01, "q_att_scale": 0.001, "confirm_count": 10,
         },
-        # LPF: 开启单向滤波（模拟实物延迟）
-        "lpf": {"enabled": True, "acc_cutoff": 15.0, "gyro_cutoff": 30.0, "use_filtfilt": False},
+        # LPF: 关闭（仿真对比用）
+        "lpf": {"enabled": False, "acc_cutoff": 15.0, "gyro_cutoff": 30.0, "use_filtfilt": False},
     },
     "A1_Fixed": {
-        "Q_gyro": 1e-5, "Q_bias": 1e-8, "R_acc": 1e-4,
+        "Q_gyro": 1e-5, "Q_bias": 1e-8, "R_acc": 5.49e-4,  # 公平对比：使用相同 R0
         "use_direction_meas": True, "nis_gating": {"enabled": False},
     },
     "A2_Gating": {
-        "Q_gyro": 1e-5, "Q_bias": 1e-8, "R_acc": 1e-4,
+        "Q_gyro": 1e-5, "Q_bias": 1e-8, "R_acc": 5.49e-4,  # 公平对比
         "use_direction_meas": True, "nis_gating": {"enabled": True, "threshold": 7.815, "mode": "reject"},
     },
     "A3_Inflate": {
-        "Q_gyro": 1e-5, "Q_bias": 1e-8, "R_acc": 1e-4,
+        "Q_gyro": 1e-5, "Q_bias": 1e-8, "R_acc": 5.49e-4,  # 公平对比
         "use_direction_meas": True, "nis_gating": {"enabled": True, "threshold": 7.815, "mode": "inflate_R"},
     },
     "A4_Conservative": {
-        "Q_gyro": 1e-5, "Q_bias": 1e-8, "R0": 1e-4,
+        "Q_gyro": 1e-5, "Q_bias": 1e-8, "R0": 5.49e-4,  # 公平对比
         "use_direction_meas": True,
         "innovation_stat": {"window_W": 50, "nis_high": 10.0, "nis_low": 2.0, "ewma_alpha": 0.1},
         "adaptation": {"r_up": 1.2, "r_down": 0.98, "lambda_max": 100.0, "lambda_min": 1.0},
