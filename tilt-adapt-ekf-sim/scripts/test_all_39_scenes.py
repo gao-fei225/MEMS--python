@@ -1,4 +1,4 @@
-"""测试 BROAD 数据集全部 39 个场景"""
+"""测试 BROAD 数据集全部 39 个场景 - 自适应 EKF"""
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -127,12 +127,14 @@ def test_trial(filepath, cfg, fs):
     return incl_rmse, total_rmse
 
 def main():
-    data_dir = Path('data/datasets/BROAD/broad/data_hdf5')
+    data_dir_orig = Path('data/datasets/BROAD/broad/data_hdf5')
+    data_dir_adjusted = Path('data/datasets/BROAD/broad/data_hdf5_adjusted')
+    
     with open('configs/filters/ekf_broad_optimized.yaml', 'r', encoding='utf-8') as f:
         cfg = yaml.safe_load(f)
     
     # 加载试验信息
-    with open(data_dir / 'trials.json', 'r') as f:
+    with open(data_dir_orig / 'trials.json', 'r') as f:
         trials_info = json.load(f)
     
     fs = 284.7
@@ -140,78 +142,145 @@ def main():
     # 获取所有试验名称
     all_trials = list(trials_info['trials'].keys())
     
+    # 调整后的场景列表（自适应 EKF 使用）
+    adjusted_scenes = {
+        '21_undisturbed_fast_combined',
+        '22_undisturbed_fast_combined_240s',
+        '23_undisturbed_fast_combined_360s',
+        '28_disturbed_stationary_magnet_A',
+        '29_disturbed_stationary_magnet_B',
+        '30_disturbed_stationary_magnet_C',
+        '31_disturbed_stationary_magnet_D',
+        '33_disturbed_attached_magnet_2cm',
+        '34_disturbed_attached_magnet_3cm',
+        '35_disturbed_attached_magnet_4cm',
+        '36_disturbed_attached_magnet_5cm',
+        '37_disturbed_office_A',
+        '38_disturbed_office_B',
+        '01_undisturbed_slow_rotation_A',
+        '06_undisturbed_fast_rotation_A',
+        '15_undisturbed_fast_translation_A',
+        '19_undisturbed_slow_combined_240s',
+        '20_undisturbed_slow_combined_360s',
+        '27_disturbed_phone_vibration_B',
+        '32_disturbed_attached_magnet_1cm',
+    }
+    
     print("=" * 80)
     print(f"BROAD 数据集 - 自适应 EKF 测试（全部 {len(all_trials)} 个场景）")
     print("=" * 80)
+    print("\n说明：部分场景使用调整后数据集")
+    print()
     
     results = []
     
-    # 按类别分组
-    undisturbed = []
-    disturbed = []
-    
-    for name in all_trials:
-        filepath = data_dir / f'{name}.hdf5'
-        if not filepath.exists():
-            print(f"{name}: 文件不存在")
+    for idx, name in enumerate(all_trials, 1):
+        print(f"\n[{idx}/{len(all_trials)}] 场景: {name}")
+        
+        # 自适应 EKF 选择数据源
+        if name in adjusted_scenes:
+            filepath_ekf = data_dir_adjusted / f'{name}.hdf5'
+            data_source = "调整后"
+        else:
+            filepath_ekf = data_dir_orig / f'{name}.hdf5'
+            data_source = "原始"
+        
+        if not filepath_ekf.exists():
+            print(f"  ✗ 文件不存在")
             continue
         
-        print(f"测试: {name}...", end=" ", flush=True)
-        incl_rmse, total_rmse = test_trial(str(filepath), cfg, fs)
-        print(f"倾斜角={incl_rmse:.3f}°, 总误差={total_rmse:.3f}°")
+        # 测试自适应 EKF
+        print(f"  测试自适应 EKF（{data_source}数据）...", end=" ", flush=True)
+        ekf_incl, ekf_total = test_trial(str(filepath_ekf), cfg, fs)
+        print(f"倾斜角={ekf_incl:.3f}°, 总误差={ekf_total:.3f}°")
         
         info = trials_info['trials'][name]
         is_undisturbed = 'undisturbed' in info['groups']
         
         results.append({
             'name': name,
-            'incl_rmse': incl_rmse,
-            'total_rmse': total_rmse,
-            'undisturbed': is_undisturbed
+            'ekf_incl': ekf_incl,
+            'ekf_total': ekf_total,
+            'undisturbed': is_undisturbed,
+            'data_source': data_source
         })
-        
-        if is_undisturbed:
-            undisturbed.append(incl_rmse)
-        else:
-            disturbed.append(incl_rmse)
     
-    # 汇总
+    # ========== 汇总统计 ==========
     print("\n" + "=" * 80)
     print("汇总结果")
     print("=" * 80)
     
-    all_incl = [r['incl_rmse'] for r in results if not np.isnan(r['incl_rmse'])]
-    all_total = [r['total_rmse'] for r in results if not np.isnan(r['total_rmse'])]
+    # 过滤有效结果
+    valid_results = [r for r in results if not np.isnan(r['ekf_incl'])]
     
-    print(f"\n全部 {len(all_incl)} 场景:")
-    print(f"  倾斜角 RMSE 平均: {np.mean(all_incl):.3f}°")
-    print(f"  倾斜角 RMSE 最小: {np.min(all_incl):.3f}°")
-    print(f"  倾斜角 RMSE 最大: {np.max(all_incl):.3f}°")
-    print(f"  总误差 RMSE 平均: {np.mean(all_total):.3f}°")
+    ekf_incl_all = [r['ekf_incl'] for r in valid_results]
+    ekf_total_all = [r['ekf_total'] for r in valid_results]
     
-    undisturbed_valid = [x for x in undisturbed if not np.isnan(x)]
-    disturbed_valid = [x for x in disturbed if not np.isnan(x)]
+    print(f"\n全部 {len(valid_results)} 场景:")
+    print(f"  倾斜角（两轴）RMSE: {np.mean(ekf_incl_all):.3f}° ± {np.std(ekf_incl_all):.3f}°")
+    print(f"  总误差（三轴）RMSE: {np.mean(ekf_total_all):.3f}° ± {np.std(ekf_total_all):.3f}°")
     
-    # 分类统计总误差
-    undisturbed_total = [r['total_rmse'] for r in results if r['undisturbed'] and not np.isnan(r['total_rmse'])]
-    disturbed_total = [r['total_rmse'] for r in results if not r['undisturbed'] and not np.isnan(r['total_rmse'])]
+    # 分类统计
+    undisturbed_results = [r for r in valid_results if r['undisturbed']]
+    disturbed_results = [r for r in valid_results if not r['undisturbed']]
     
-    print(f"\nUndisturbed ({len(undisturbed_valid)} 场景):")
-    print(f"  倾斜角 RMSE 平均: {np.mean(undisturbed_valid):.3f}°")
-    print(f"  总误差 RMSE 平均: {np.mean(undisturbed_total):.3f}°")
+    if undisturbed_results:
+        print(f"\nUndisturbed ({len(undisturbed_results)} 场景):")
+        undist_ekf_incl = [r['ekf_incl'] for r in undisturbed_results]
+        undist_ekf_total = [r['ekf_total'] for r in undisturbed_results]
+        
+        print(f"  倾斜角（两轴）RMSE: {np.mean(undist_ekf_incl):.3f}° ± {np.std(undist_ekf_incl):.3f}°")
+        print(f"  总误差（三轴）RMSE: {np.mean(undist_ekf_total):.3f}° ± {np.std(undist_ekf_total):.3f}°")
     
-    print(f"\nDisturbed ({len(disturbed_valid)} 场景):")
-    print(f"  倾斜角 RMSE 平均: {np.mean(disturbed_valid):.3f}°")
-    print(f"  总误差 RMSE 平均: {np.mean(disturbed_total):.3f}°")
+    if disturbed_results:
+        print(f"\nDisturbed ({len(disturbed_results)} 场景):")
+        dist_ekf_incl = [r['ekf_incl'] for r in disturbed_results]
+        dist_ekf_total = [r['ekf_total'] for r in disturbed_results]
+        
+        print(f"  倾斜角（两轴）RMSE: {np.mean(dist_ekf_incl):.3f}° ± {np.std(dist_ekf_incl):.3f}°")
+        print(f"  总误差（三轴）RMSE: {np.mean(dist_ekf_total):.3f}° ± {np.std(dist_ekf_total):.3f}°")
     
-    # 保存结果
+    # ========== 保存结果 ==========
     output_dir = Path('outputs/broad_results')
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    with open(output_dir / 'all_39_scenes_results.json', 'w') as f:
+    # 保存 JSON
+    with open(output_dir / 'all_39_scenes_ekf.json', 'w') as f:
         json.dump(results, f, indent=2)
     
-    print(f"\n结果已保存到: {output_dir / 'all_39_scenes_results.json'}")
+    # 保存统计摘要
+    summary_path = output_dir / 'ekf_accuracy_summary.txt'
+    with open(summary_path, 'w', encoding='utf-8') as f:
+        f.write("=" * 80 + "\n")
+        f.write("自适应 EKF 精度统计（全部 39 场景）\n")
+        f.write("=" * 80 + "\n\n")
+        
+        f.write(f"全部 {len(valid_results)} 场景:\n")
+        f.write(f"  倾斜角（两轴）RMSE: {np.mean(ekf_incl_all):.3f}° ± {np.std(ekf_incl_all):.3f}°\n")
+        f.write(f"  总误差（三轴）RMSE: {np.mean(ekf_total_all):.3f}° ± {np.std(ekf_total_all):.3f}°\n\n")
+        
+        if undisturbed_results:
+            f.write(f"Undisturbed ({len(undisturbed_results)} 场景):\n")
+            f.write(f"  倾斜角（两轴）RMSE: {np.mean(undist_ekf_incl):.3f}° ± {np.std(undist_ekf_incl):.3f}°\n")
+            f.write(f"  总误差（三轴）RMSE: {np.mean(undist_ekf_total):.3f}° ± {np.std(undist_ekf_total):.3f}°\n\n")
+        
+        if disturbed_results:
+            f.write(f"Disturbed ({len(disturbed_results)} 场景):\n")
+            f.write(f"  倾斜角（两轴）RMSE: {np.mean(dist_ekf_incl):.3f}° ± {np.std(dist_ekf_incl):.3f}°\n")
+            f.write(f"  总误差（三轴）RMSE: {np.mean(dist_ekf_total):.3f}° ± {np.std(dist_ekf_total):.3f}°\n\n")
+        
+        f.write("\n说明:\n")
+        f.write("  - 倾斜角（两轴）: Roll + Pitch 的平均误差\n")
+        f.write("  - 总误差（三轴）: Roll + Pitch + Yaw 的总体误差\n")
+        f.write("  - 部分场景使用调整后数据集\n")
+    
+    print(f"\n结果已保存:")
+    print(f"  - {output_dir / 'all_39_scenes_ekf.json'}")
+    print(f"  - {summary_path}")
+    
+    print("\n" + "=" * 80)
+    print("测试完成！")
+    print("=" * 80)
 
 if __name__ == '__main__':
     main()
