@@ -1,0 +1,46 @@
+{
+  "metrics": {
+    "rmse_roll": 8.86426106650195,
+    "rmse_pitch": 9.16729957870827,
+    "peak_roll": 15.660999223588504,
+    "peak_pitch": 15.784399094933804,
+    "bias_roll": -1.8849486364895178,
+    "bias_pitch": -0.7421473769522752,
+    "noise_roll": 8.661529477690333,
+    "noise_pitch": 9.13720957605043,
+    "mean_roll": -1.8849486364895178,
+    "mean_pitch": -0.7421473769522752,
+    "std_roll": 8.661529477690333,
+    "std_pitch": 9.13720957605043,
+    "burn_in_samples": 50,
+    "burn_in_s": 0.5
+  },
+  "experiment": {
+    "name": "turn_test",
+    "scenario": "turn",
+    "sensor": "imu_nominal",
+    "filter": "ekf_fixed",
+    "filter_params": {
+      "filter": {
+        "name": "ekf_fixed",
+        "type": "ekf_fixed"
+      },
+      "Q_gyro": 1e-05,
+      "Q_bias": 1e-08,
+      "R_acc": 3.5e-06,
+      "use_direction_meas": true,
+      "nis_gating": {
+        "enabled": true,
+        "threshold": 7.815,
+        "mode": "inflate_R"
+      },
+      "init_P_att": 0.0076,
+      "init_P_bias": 0.0001
+    },
+    "burn_in_s": 0.5,
+    "fs": 100.0,
+    "duration_s": 30.0,
+    "n_samples": 3001
+  },
+  "timestamp": "2026-01-02T11:28:15.111274"
+}

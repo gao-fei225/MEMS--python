@@ -1,0 +1,8 @@
+﻿Metric,Time_us,Time_ms
+Mean,224.55,0.225
+Std Dev,40.60,0.041
+Median,211.80,0.212
+Min,193.60,0.194
+Max,1381.60,1.382
+95th Percentile,283.42,0.283
+99th Percentile,406.21,0.406

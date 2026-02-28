@@ -1,0 +1,46 @@
+{
+  "metrics": {
+    "rmse_roll": 0.07252178835103908,
+    "rmse_pitch": 6.740566733739622,
+    "peak_roll": 0.1612044746395327,
+    "peak_pitch": 11.811639163008977,
+    "bias_roll": -0.0651677720352481,
+    "bias_pitch": -4.1088688581624435,
+    "noise_roll": 0.031820925090179926,
+    "noise_pitch": 5.343448006523514,
+    "mean_roll": -0.0651677720352481,
+    "mean_pitch": -4.1088688581624435,
+    "std_roll": 0.031820925090179926,
+    "std_pitch": 5.343448006523514,
+    "burn_in_samples": 50,
+    "burn_in_s": 0.5
+  },
+  "experiment": {
+    "name": "accel_runone_test",
+    "scenario": "accel",
+    "sensor": "imu_nominal",
+    "filter": "ekf_fixed",
+    "filter_params": {
+      "filter": {
+        "name": "ekf_fixed",
+        "type": "ekf_fixed"
+      },
+      "Q_gyro": 1e-05,
+      "Q_bias": 1e-08,
+      "R_acc": 3.5e-06,
+      "use_direction_meas": true,
+      "nis_gating": {
+        "enabled": true,
+        "threshold": 7.815,
+        "mode": "inflate_R"
+      },
+      "init_P_att": 0.0076,
+      "init_P_bias": 0.0001
+    },
+    "burn_in_s": 0.5,
+    "fs": 100.0,
+    "duration_s": 30.0,
+    "n_samples": 3001
+  },
+  "timestamp": "2026-01-02T11:18:22.163537"
+}

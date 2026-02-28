@@ -1,0 +1,52 @@
+{
+  "vibration": {
+    "rmse_adaptive": 1.2552067977368657,
+    "rmse_fixed": 2.570265763094943,
+    "improvement": 51.16431865686024,
+    "nis_mean": 40.56594074539614,
+    "nis_p95": 68.29457398414884,
+    "lambda_mean": 31.373949743788472,
+    "lambda_max": 148.57056062591133,
+    "consistent": false
+  },
+  "shock": {
+    "rmse_adaptive": 0.1411631315162541,
+    "rmse_fixed": 0.1411631315162541,
+    "improvement": 0.0,
+    "nis_mean": 2.143058884595972,
+    "nis_p95": 6.411646347571874,
+    "lambda_mean": 1.0,
+    "lambda_max": 1.0,
+    "consistent": true
+  },
+  "swing": {
+    "rmse_adaptive": 0.15357294959944323,
+    "rmse_fixed": 0.15357294959944323,
+    "improvement": 0.0,
+    "nis_mean": 2.271485703273801,
+    "nis_p95": 6.754582386367667,
+    "lambda_mean": 1.0,
+    "lambda_max": 1.0,
+    "consistent": true
+  },
+  "turn": {
+    "rmse_adaptive": 13.460530513176565,
+    "rmse_fixed": 13.505656181930568,
+    "improvement": 0.3341242228154613,
+    "nis_mean": 6.272313792391413,
+    "nis_p95": 44.38020581772702,
+    "lambda_mean": 10.741492519251127,
+    "lambda_max": 510.6398653321684,
+    "consistent": true
+  },
+  "accel": {
+    "rmse_adaptive": 13.215439366740245,
+    "rmse_fixed": 13.215439366740245,
+    "improvement": 0.0,
+    "nis_mean": 3.5470417850132487,
+    "nis_p95": 10.669810351124331,
+    "lambda_mean": 1.0,
+    "lambda_max": 1.0,
+    "consistent": true
+  }
+}

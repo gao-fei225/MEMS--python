@@ -1,0 +1,236 @@
+[
+  {
+    "name": "01_undisturbed_slow_rotation_A",
+    "incl_rmse": 0.5723389167373415,
+    "total_rmse": 3.614233683213279,
+    "undisturbed": true
+  },
+  {
+    "name": "02_undisturbed_slow_rotation_B",
+    "incl_rmse": 0.47976787291002415,
+    "total_rmse": 0.8554042109039743,
+    "undisturbed": true
+  },
+  {
+    "name": "03_undisturbed_slow_rotation_C",
+    "incl_rmse": 0.5841919156201472,
+    "total_rmse": 0.9138386008629857,
+    "undisturbed": true
+  },
+  {
+    "name": "04_undisturbed_slow_rotation_with_breaks_A",
+    "incl_rmse": 1.004722484143342,
+    "total_rmse": 1.929457735519872,
+    "undisturbed": true
+  },
+  {
+    "name": "05_undisturbed_slow_rotation_with_breaks_B",
+    "incl_rmse": 0.5224644290350408,
+    "total_rmse": 1.0628346708200171,
+    "undisturbed": true
+  },
+  {
+    "name": "06_undisturbed_fast_rotation_A",
+    "incl_rmse": 0.7897404228963022,
+    "total_rmse": 4.10893283724346,
+    "undisturbed": true
+  },
+  {
+    "name": "07_undisturbed_fast_rotation_B",
+    "incl_rmse": 1.1299100901244212,
+    "total_rmse": 3.426304539653139,
+    "undisturbed": true
+  },
+  {
+    "name": "08_undisturbed_fast_rotation_with_breaks_A",
+    "incl_rmse": 1.5418339815286661,
+    "total_rmse": 2.43256899724078,
+    "undisturbed": true
+  },
+  {
+    "name": "09_undisturbed_fast_rotation_with_breaks_B",
+    "incl_rmse": 1.0560844549016557,
+    "total_rmse": 2.206995133473443,
+    "undisturbed": true
+  },
+  {
+    "name": "10_undisturbed_slow_translation_A",
+    "incl_rmse": 0.21433885121291046,
+    "total_rmse": 2.556519740718747,
+    "undisturbed": true
+  },
+  {
+    "name": "11_undisturbed_slow_translation_B",
+    "incl_rmse": 0.6160230932861556,
+    "total_rmse": 1.6563798192608088,
+    "undisturbed": true
+  },
+  {
+    "name": "12_undisturbed_slow_translation_C",
+    "incl_rmse": 0.3231562178811777,
+    "total_rmse": 0.9492870371177561,
+    "undisturbed": true
+  },
+  {
+    "name": "13_undisturbed_slow_translation_with_breaks_A",
+    "incl_rmse": 0.557039822526365,
+    "total_rmse": 1.9929478304962116,
+    "undisturbed": true
+  },
+  {
+    "name": "14_undisturbed_slow_translation_with_breaks_B",
+    "incl_rmse": 1.1486759862891767,
+    "total_rmse": 1.551366038005816,
+    "undisturbed": true
+  },
+  {
+    "name": "15_undisturbed_fast_translation_A",
+    "incl_rmse": 0.6043708494486193,
+    "total_rmse": 3.2650288086039287,
+    "undisturbed": true
+  },
+  {
+    "name": "16_undisturbed_fast_translation_B",
+    "incl_rmse": 1.2777053511577532,
+    "total_rmse": 2.151196183703505,
+    "undisturbed": true
+  },
+  {
+    "name": "17_undisturbed_fast_translation_with_breaks_A",
+    "incl_rmse": 0.7223346972195145,
+    "total_rmse": 0.9916592768758129,
+    "undisturbed": true
+  },
+  {
+    "name": "18_undisturbed_fast_translation_with_breaks_B",
+    "incl_rmse": 1.2758382754574182,
+    "total_rmse": 1.8537875984933612,
+    "undisturbed": true
+  },
+  {
+    "name": "19_undisturbed_slow_combined_240s",
+    "incl_rmse": 1.5593399193489679,
+    "total_rmse": 4.591689684295056,
+    "undisturbed": true
+  },
+  {
+    "name": "20_undisturbed_slow_combined_360s",
+    "incl_rmse": 1.2649811349914803,
+    "total_rmse": 5.504773532061663,
+    "undisturbed": true
+  },
+  {
+    "name": "21_undisturbed_fast_combined",
+    "incl_rmse": 0.809621227776784,
+    "total_rmse": 4.085411028501724,
+    "undisturbed": true
+  },
+  {
+    "name": "22_undisturbed_fast_combined_240s",
+    "incl_rmse": 0.8304174099283237,
+    "total_rmse": 1.7646816850313303,
+    "undisturbed": true
+  },
+  {
+    "name": "23_undisturbed_fast_combined_360s",
+    "incl_rmse": 0.7472421566891958,
+    "total_rmse": 1.9585987526075619,
+    "undisturbed": true
+  },
+  {
+    "name": "24_disturbed_tapping_A",
+    "incl_rmse": 0.7854432073978325,
+    "total_rmse": 1.849485507801547,
+    "undisturbed": false
+  },
+  {
+    "name": "25_disturbed_tapping_B",
+    "incl_rmse": 0.5085403597567609,
+    "total_rmse": 1.716991818406459,
+    "undisturbed": false
+  },
+  {
+    "name": "26_disturbed_phone_vibration_A",
+    "incl_rmse": 0.6594078479274604,
+    "total_rmse": 3.9435536107721076,
+    "undisturbed": false
+  },
+  {
+    "name": "27_disturbed_phone_vibration_B",
+    "incl_rmse": 0.38559155258020994,
+    "total_rmse": 5.442430780233162,
+    "undisturbed": false
+  },
+  {
+    "name": "28_disturbed_stationary_magnet_A",
+    "incl_rmse": 0.22802133000146838,
+    "total_rmse": 4.84425986840112,
+    "undisturbed": false
+  },
+  {
+    "name": "29_disturbed_stationary_magnet_B",
+    "incl_rmse": 0.24563217184781938,
+    "total_rmse": 4.505966561395489,
+    "undisturbed": false
+  },
+  {
+    "name": "30_disturbed_stationary_magnet_C",
+    "incl_rmse": 0.795284375899416,
+    "total_rmse": 2.832559025380303,
+    "undisturbed": false
+  },
+  {
+    "name": "31_disturbed_stationary_magnet_D",
+    "incl_rmse": 0.7537959838189133,
+    "total_rmse": 2.289802980716447,
+    "undisturbed": false
+  },
+  {
+    "name": "32_disturbed_attached_magnet_1cm",
+    "incl_rmse": 0.48040307952246586,
+    "total_rmse": 5.713415297539494,
+    "undisturbed": false
+  },
+  {
+    "name": "33_disturbed_attached_magnet_2cm",
+    "incl_rmse": 0.20624159197458072,
+    "total_rmse": 1.9091598778692547,
+    "undisturbed": false
+  },
+  {
+    "name": "34_disturbed_attached_magnet_3cm",
+    "incl_rmse": 0.3466327016238445,
+    "total_rmse": 3.0429361380550053,
+    "undisturbed": false
+  },
+  {
+    "name": "35_disturbed_attached_magnet_4cm",
+    "incl_rmse": 0.1774544505736209,
+    "total_rmse": 4.348920736054443,
+    "undisturbed": false
+  },
+  {
+    "name": "36_disturbed_attached_magnet_5cm",
+    "incl_rmse": 0.32309809755334995,
+    "total_rmse": 3.2266584133028062,
+    "undisturbed": false
+  },
+  {
+    "name": "37_disturbed_office_A",
+    "incl_rmse": 0.21005697995679998,
+    "total_rmse": 4.414199198686179,
+    "undisturbed": false
+  },
+  {
+    "name": "38_disturbed_office_B",
+    "incl_rmse": 0.2902240009382989,
+    "total_rmse": 3.8765341569124776,
+    "undisturbed": false
+  },
+  {
+    "name": "39_disturbed_mixed",
+    "incl_rmse": 1.0466044635247114,
+    "total_rmse": 1.9613160747852456,
+    "undisturbed": false
+  }
+]

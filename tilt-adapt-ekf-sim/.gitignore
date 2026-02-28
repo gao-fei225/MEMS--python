@@ -37,13 +37,6 @@ data/datasets/
 data/external/
 data/generated/
 
-# Output files
-outputs/
-*.png
-*.jpg
-*.pdf
-*.json
-
 # Temporary files
 *.tmp
 temp_*.txt

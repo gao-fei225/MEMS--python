@@ -1,0 +1,6 @@
+﻿Algorithm,6D RMSE (deg),9D RMSE (deg)
+Adaptive EKF (Ours),0.694,2.855
+VQF,0.78,2.94
+Mahony,1.2,8.5
+Madgwick,1.45,11.83
+EKF (Basic),1.1,7.2

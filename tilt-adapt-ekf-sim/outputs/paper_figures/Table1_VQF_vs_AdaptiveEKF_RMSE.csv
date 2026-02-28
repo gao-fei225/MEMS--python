@@ -1,0 +1,7 @@
+﻿Scene,Algorithm,Roll RMSE (deg),Pitch RMSE (deg),Average RMSE (deg)
+30_disturbed_stationary_magnet_C,**Adaptive EKF (Ours)**,0.633,0.520,0.576
+30_disturbed_stationary_magnet_C,VQF,1.315,0.818,1.067
+33_disturbed_attached_magnet_2cm,**Adaptive EKF (Ours)**,0.118,0.120,0.119
+33_disturbed_attached_magnet_2cm,VQF,0.244,0.168,0.206
+37_disturbed_office_A,**Adaptive EKF (Ours)**,0.148,0.143,0.146
+37_disturbed_office_A,VQF,0.477,0.330,0.403

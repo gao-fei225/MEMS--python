@@ -1,0 +1,5 @@
+﻿Scene,Algorithm,Roll RMSE (deg),Pitch RMSE (deg)
+15_undisturbed_fast_translation_A,Adaptive EKF (Ours),nan,nan
+15_undisturbed_fast_translation_A,Basic EKF,nan,nan
+21_undisturbed_fast_combined,Adaptive EKF (Ours),nan,nan
+21_undisturbed_fast_combined,Basic EKF,nan,nan

@@ -1,0 +1,82 @@
+{
+  "01_undisturbed_slow_rotation_A": {
+    "errors": {
+      "total_rmse_deg": 7.390620973344236,
+      "heading_rmse_deg": 7.371733905982937,
+      "inclination_rmse_deg": 0.5282839521561734,
+      "valid_ratio": 0.6296979276431331
+    },
+    "n_samples": 56940,
+    "duration": 200.0
+  },
+  "02_undisturbed_slow_rotation_B": {
+    "errors": {
+      "total_rmse_deg": 4.095162730207826,
+      "heading_rmse_deg": 4.075416068425433,
+      "inclination_rmse_deg": 0.4017417394917322,
+      "valid_ratio": 0.6063110443275732
+    },
+    "n_samples": 53240,
+    "duration": 187.00386371619248
+  },
+  "06_undisturbed_fast_rotation_A": {
+    "errors": {
+      "total_rmse_deg": 70.24383111995249,
+      "heading_rmse_deg": 70.23648359411192,
+      "inclination_rmse_deg": 1.1144488912946504,
+      "valid_ratio": 0.6186945725434552
+    },
+    "n_samples": 56380,
+    "duration": 198.0330172110994
+  },
+  "10_undisturbed_slow_translation_A": {
+    "errors": {
+      "total_rmse_deg": 85.50038775659058,
+      "heading_rmse_deg": 85.48521269317881,
+      "inclination_rmse_deg": 1.9397274035673073,
+      "valid_ratio": 0.6283997184572904
+    },
+    "n_samples": 55409,
+    "duration": 194.6224095539164
+  },
+  "15_undisturbed_fast_translation_A": {
+    "errors": {
+      "total_rmse_deg": 94.20252192884764,
+      "heading_rmse_deg": 94.12903049140488,
+      "inclination_rmse_deg": 4.162257464295581,
+      "valid_ratio": 0.5734835223380775
+    },
+    "n_samples": 52556,
+    "duration": 184.60133473832104
+  },
+  "19_undisturbed_slow_combined_240s": {
+    "errors": {
+      "total_rmse_deg": 14.728389232162378,
+      "heading_rmse_deg": 14.697455375857004,
+      "inclination_rmse_deg": 0.9571874334743203,
+      "valid_ratio": 0.7829024309931759
+    },
+    "n_samples": 88071,
+    "duration": 309.34668071654374
+  },
+  "24_disturbed_tapping_A": {
+    "errors": {
+      "total_rmse_deg": 13.193444498063151,
+      "heading_rmse_deg": 13.177789244027139,
+      "inclination_rmse_deg": 0.6439236232044477,
+      "valid_ratio": 0.596941779517196
+    },
+    "n_samples": 57746,
+    "duration": 202.83105022831052
+  },
+  "26_disturbed_phone_vibration_A": {
+    "errors": {
+      "total_rmse_deg": 12.791145357970668,
+      "heading_rmse_deg": 12.75760061828447,
+      "inclination_rmse_deg": 0.9277825552494037,
+      "valid_ratio": 0.5990969706515462
+    },
+    "n_samples": 57141,
+    "duration": 200.7060063224447
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "metrics": {
+    "rmse_roll": 0.07219092062844613,
+    "rmse_pitch": 0.11973506139030557,
+    "peak_roll": 0.16205381278132336,
+    "peak_pitch": 0.2876992627010111,
+    "bias_roll": -0.06409792588689542,
+    "bias_pitch": -0.11531595964127267,
+    "noise_roll": 0.03321121675248699,
+    "noise_pitch": 0.03222909210872401,
+    "mean_roll": -0.06409792588689542,
+    "mean_pitch": -0.11531595964127267,
+    "std_roll": 0.03321121675248699,
+    "std_pitch": 0.03222909210872401,
+    "burn_in_samples": 50,
+    "burn_in_s": 0.5
+  },
+  "experiment": {
+    "name": "shock_test",
+    "scenario": "shock",
+    "sensor": "imu_nominal",
+    "filter": "ekf_fixed",
+    "filter_params": {
+      "filter": {
+        "name": "ekf_fixed",
+        "type": "ekf_fixed"
+      },
+      "Q_gyro": 1e-05,
+      "Q_bias": 1e-08,
+      "R_acc": 3.5e-06,
+      "use_direction_meas": true,
+      "nis_gating": {
+        "enabled": true,
+        "threshold": 7.815,
+        "mode": "inflate_R"
+      },
+      "init_P_att": 0.0076,
+      "init_P_bias": 0.0001
+    },
+    "burn_in_s": 0.5,
+    "fs": 100.0,
+    "duration_s": 20.0,
+    "n_samples": 2001
+  },
+  "timestamp": "2026-01-02T11:30:52.111218"
+}

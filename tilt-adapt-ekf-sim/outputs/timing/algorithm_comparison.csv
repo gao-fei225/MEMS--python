@@ -1,0 +1,6 @@
+﻿Algorithm,Implementation,Time_us,Time_ms,9D_RMSE_deg
+Adaptive EKF (Ours),Python,224.55,0.225,2.85
+VQF,Python (est.),280.00,0.280,2.94
+Madgwick,Python (est.),60.00,0.060,11.83
+Mahony,Python (est.),50.00,0.050,8.50
+Basic EKF,Python (est.),157.19,0.157,7.20

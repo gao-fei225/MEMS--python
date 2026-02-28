@@ -1,0 +1,16 @@
+{
+  "P50": {
+    "vibration_rmse": 1.04,
+    "shock_rmse": 0.14,
+    "swing_rmse": 0.15,
+    "turn_rmse": 13.4,
+    "accel_rmse": 13.2
+  },
+  "P90": {
+    "vibration_rmse": 1.5,
+    "shock_rmse": 0.2,
+    "swing_rmse": 0.2,
+    "turn_rmse": 15.0,
+    "accel_rmse": 15.0
+  }
+}
