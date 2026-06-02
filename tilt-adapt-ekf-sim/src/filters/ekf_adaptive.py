@@ -12,8 +12,22 @@
 import numpy as np
 from typing import Dict, Any, Tuple
 from collections import deque
+from dataclasses import fields
 from scipy import signal
 
+from ..features import (
+    EKFAdaptationCommand,
+    EKFStateAdapter,
+    EKFStateAdapterConfig,
+    HybridParameterStateController,
+    LearnedStateClassifier,
+    LearnedParameterPredictor,
+    MotionStateProb,
+    RuleBasedStateClassifier,
+    RuleBasedStateClassifierConfig,
+    SlidingFeatureExtractor,
+    WindowFeatureConfig,
+)
 from ..common.math3d import (
     quat_normalize,
     quat_multiply,
@@ -211,6 +225,221 @@ class EKFAdaptive:
         # 自适应重力估计（融合两级滤波器）
         self._gravity_estimate = np.array([0.0, 0.0, GRAVITY], dtype=np.float64)
 
+        # ========== 状态识别驱动的参数调度（默认关闭）==========
+        state_cfg = cfg.get("state_classifier", {})
+        adapter_cfg = cfg.get("state_adapter", {})
+        self.use_state_adaptation = state_cfg.get("enabled", False) and adapter_cfg.get("enabled", False)
+        self.state_features = None
+        self.state_prob = MotionStateProb(
+            static=0.0,
+            low_dynamic=1.0,
+            high_dynamic=0.0,
+            magnetic_disturbance=0.0,
+        )
+        self.state_command = EKFAdaptationCommand(
+            r_acc_scale=1.0,
+            r_mag_scale=1.0,
+            zaru_allowed=self.use_zaru,
+            mag_update_allowed=True,
+            dominant_motion_state="low_dynamic",
+            state_prob=self.state_prob.as_dict(),
+        )
+        self._state_r_acc_scale = 1.0
+        self._state_r_mag_scale = 1.0
+        self._state_zaru_allowed = True
+        self._state_mag_update_allowed = True
+        self._state_acc_scale_composition = str(
+            adapter_cfg.get("acc_scale_composition", "multiply")
+        ).lower()
+        self._state_mag_scale_composition = str(
+            adapter_cfg.get("mag_scale_composition", "multiply")
+        ).lower()
+        self._last_acc_sample = None
+        self._last_gyro_sample = None
+        self._state_sample_counter = 0
+        self._state_update_stride = max(1, int(state_cfg.get("stride_samples", 1)))
+        self._state_refresh_due = False
+
+        if self.use_state_adaptation:
+            feature_cfg = WindowFeatureConfig(
+                **self._dataclass_kwargs(
+                    WindowFeatureConfig,
+                    {
+                        **state_cfg,
+                        "fs": state_cfg.get("fs", cfg.get("fs", 100.0)),
+                        "gravity": state_cfg.get("gravity", GRAVITY),
+                    },
+                )
+            )
+            classifier_cfg = RuleBasedStateClassifierConfig(
+                **self._dataclass_kwargs(
+                    RuleBasedStateClassifierConfig,
+                    state_cfg.get("thresholds", state_cfg),
+                )
+            )
+            classifier_type = str(state_cfg.get("type", "rule")).lower()
+            if classifier_type in {
+                "learned",
+                "mlp",
+                "parameter_predictor",
+                "parameter",
+                "direct",
+                "hybrid_parameter",
+                "hybrid_parameter_state",
+            }:
+                schedule_defaults = EKFStateAdapterConfig.for_learned()
+                schedule_base = {
+                    field.name: getattr(schedule_defaults, field.name)
+                    for field in fields(EKFStateAdapterConfig)
+                }
+                schedule_base.update(adapter_cfg)
+                schedule_cfg = EKFStateAdapterConfig(
+                    **self._dataclass_kwargs(EKFStateAdapterConfig, schedule_base)
+                )
+            else:
+                schedule_cfg = EKFStateAdapterConfig(
+                    **self._dataclass_kwargs(EKFStateAdapterConfig, adapter_cfg)
+                )
+            self.state_feature_extractor = SlidingFeatureExtractor(feature_cfg)
+            if classifier_type in {"learned", "mlp"}:
+                motion_model_path = state_cfg.get("motion_model_path")
+                if not motion_model_path:
+                    raise ValueError("state_classifier.motion_model_path is required for learned classifier")
+                self.state_classifier = LearnedStateClassifier(
+                    motion_model_path=motion_model_path,
+                    magnetic_model_path=state_cfg.get("magnetic_model_path"),
+                    magnetic_fallback=RuleBasedStateClassifier(classifier_cfg),
+                    magnetic_fusion_mode=state_cfg.get("magnetic_fusion_mode", "max"),
+                    magnetic_model_weight=state_cfg.get("magnetic_model_weight", 0.7),
+                    magnetic_rule_weight=state_cfg.get("magnetic_rule_weight", 0.3),
+                )
+            elif classifier_type in {"parameter_predictor", "parameter", "direct"}:
+                parameter_model_path = state_cfg.get("parameter_model_path")
+                if not parameter_model_path:
+                    raise ValueError("state_classifier.parameter_model_path is required for parameter predictor")
+                self.state_classifier = LearnedParameterPredictor(
+                    model_path=parameter_model_path,
+                    acc_scale_min=adapter_cfg.get("acc_scale_min", schedule_cfg.acc_scale_min),
+                    acc_scale_max=adapter_cfg.get("acc_scale_max", schedule_cfg.acc_scale_max),
+                    mag_scale_min=adapter_cfg.get("mag_scale_min", schedule_cfg.mag_scale_min),
+                    mag_scale_max=adapter_cfg.get("mag_scale_max", schedule_cfg.mag_scale_max),
+                    use_predicted_r_mag=state_cfg.get("use_predicted_r_mag", True),
+                    use_predicted_mag_gate=state_cfg.get("use_predicted_mag_gate", True),
+                    r_acc_gain=state_cfg.get("r_acc_gain", 1.0),
+                )
+            elif classifier_type in {"hybrid_parameter", "hybrid_parameter_state"}:
+                parameter_model_path = state_cfg.get("parameter_model_path")
+                motion_model_path = state_cfg.get("motion_model_path")
+                if not parameter_model_path:
+                    raise ValueError("state_classifier.parameter_model_path is required for hybrid parameter controller")
+                if not motion_model_path:
+                    raise ValueError("state_classifier.motion_model_path is required for hybrid parameter controller")
+                parameter_predictor = LearnedParameterPredictor(
+                    model_path=parameter_model_path,
+                    acc_scale_min=adapter_cfg.get("acc_scale_min", schedule_cfg.acc_scale_min),
+                    acc_scale_max=adapter_cfg.get("acc_scale_max", schedule_cfg.acc_scale_max),
+                    mag_scale_min=adapter_cfg.get("mag_scale_min", schedule_cfg.mag_scale_min),
+                    mag_scale_max=adapter_cfg.get("mag_scale_max", schedule_cfg.mag_scale_max),
+                    use_predicted_r_mag=False,
+                    use_predicted_mag_gate=False,
+                    r_acc_gain=state_cfg.get("r_acc_gain", 1.0),
+                )
+                learned_classifier = LearnedStateClassifier(
+                    motion_model_path=motion_model_path,
+                    magnetic_model_path=state_cfg.get("magnetic_model_path"),
+                    magnetic_fallback=RuleBasedStateClassifier(classifier_cfg),
+                    magnetic_fusion_mode=state_cfg.get("magnetic_fusion_mode", "max"),
+                    magnetic_model_weight=state_cfg.get("magnetic_model_weight", 0.7),
+                    magnetic_rule_weight=state_cfg.get("magnetic_rule_weight", 0.3),
+                )
+                self.state_classifier = HybridParameterStateController(
+                    parameter_predictor=parameter_predictor,
+                    state_classifier=learned_classifier,
+                    state_adapter=EKFStateAdapter(schedule_cfg),
+                )
+            else:
+                self.state_classifier = RuleBasedStateClassifier(classifier_cfg)
+            self.state_adapter = EKFStateAdapter(schedule_cfg)
+        else:
+            self.state_feature_extractor = None
+            self.state_classifier = None
+            self.state_adapter = None
+
+    def _dataclass_kwargs(self, cls, cfg: Dict[str, Any]) -> Dict[str, Any]:
+        allowed = {field.name for field in fields(cls)}
+        return {key: value for key, value in cfg.items() if key in allowed}
+
+    def _update_state_adaptation(
+        self,
+        acc: np.ndarray,
+        gyro: np.ndarray | None,
+        timestamp: float | None = None,
+    ) -> None:
+        if not self.use_state_adaptation or self.state_feature_extractor is None:
+            return
+        if gyro is None:
+            gyro = np.zeros(3, dtype=np.float64)
+
+        self._last_acc_sample = np.asarray(acc, dtype=np.float64).copy()
+        self._last_gyro_sample = np.asarray(gyro, dtype=np.float64).copy()
+        self._state_sample_counter += 1
+        should_refresh = (self._state_sample_counter % self._state_update_stride) == 0
+        features = self.state_feature_extractor.update(
+            acc=self._last_acc_sample,
+            gyro=self._last_gyro_sample,
+            mag=None,
+            timestamp=timestamp,
+            return_features=should_refresh,
+        )
+        self._state_refresh_due = features is not None
+        self._refresh_state_command(features)
+
+    def _update_state_adaptation_mag(self, mag: np.ndarray) -> None:
+        if not self.use_state_adaptation or self.state_feature_extractor is None:
+            return
+        features = self.state_feature_extractor.update_latest_mag(
+            mag,
+            return_features=self._state_refresh_due,
+        )
+        self._refresh_state_command(features)
+        if self._state_refresh_due:
+            self._state_refresh_due = False
+
+    def _refresh_state_command(self, features: Dict[str, float] | None) -> None:
+        if features is None or self.state_classifier is None or self.state_adapter is None:
+            return
+        self.state_features = features
+        if hasattr(self.state_classifier, "predict_command"):
+            self.state_command = self.state_classifier.predict_command(features)
+            self.state_prob = MotionStateProb(
+                static=float(self.state_command.state_prob.get("static", 0.0)),
+                low_dynamic=float(self.state_command.state_prob.get("low_dynamic", 1.0)),
+                high_dynamic=float(self.state_command.state_prob.get("high_dynamic", 0.0)),
+                magnetic_disturbance=float(
+                    self.state_command.state_prob.get("magnetic_disturbance", 0.0)
+                ),
+            )
+        else:
+            self.state_prob = self.state_classifier.predict_proba(features)
+            self.state_command = self.state_adapter.adapt(self.state_prob)
+        self._state_r_acc_scale = self.state_command.r_acc_scale
+        self._state_r_mag_scale = self.state_command.r_mag_scale
+        self._state_zaru_allowed = self.state_command.zaru_allowed
+        self._state_mag_update_allowed = self.state_command.mag_update_allowed
+
+    def _apply_state_acc_scale(self) -> None:
+        if not self.use_state_adaptation:
+            return
+        if self._state_acc_scale_composition in {"replace_lambda", "replace", "state_only"}:
+            self.R_acc = self.R0 * self._state_r_acc_scale
+            return
+        self.R_acc = self.R0 * self.lambda_k * self._state_r_acc_scale
+
+    def _state_mag_noise_scale(self, mag_trust: float) -> float:
+        if self._state_mag_scale_composition in {"replace_trust", "replace", "state_only"}:
+            return self._state_r_mag_scale
+        return self._state_r_mag_scale / max(float(mag_trust), 1e-9)
+
     def predict(self, gyro: np.ndarray, dt: float) -> None:
         omega = gyro - self.b_g
         self.q = propagate_quaternion(self.q, omega, dt)
@@ -226,7 +455,7 @@ class EKFAdaptive:
         
         # ZARU: 静止时降低角度 Q，让 Bias 更快收敛
         Q = np.zeros((6, 6), dtype=np.float64)
-        if self._is_static and self.use_zaru:
+        if self._is_static and self.use_zaru and self._state_zaru_allowed:
             # 静止时：角度预测几乎没噪声，Bias 快速收敛
             Q[0:3, 0:3] = np.eye(3) * self.Q_gyro * dt * self.zaru_q_att_scale
             # 增强：静止时大幅增大 Bias 的过程噪声，极速收敛（VQF 风格）
@@ -302,7 +531,14 @@ class EKFAdaptive:
         else:
             return max(nis_dir, nis_mag * self.mag_weight)
 
-    def update(self, acc: np.ndarray, gyro: np.ndarray = None) -> Tuple[np.ndarray, float, float, float, float, float]:
+    def update(
+        self,
+        acc: np.ndarray,
+        gyro: np.ndarray = None,
+        timestamp: float | None = None,
+    ) -> Tuple[np.ndarray, float, float, float, float, float]:
+        self._update_state_adaptation(acc, gyro, timestamp)
+
         # VQF 风格预滤波
         if self.use_strap_prefilter:
             acc_obs = self._strapdown_prefilter(acc)
@@ -357,6 +593,7 @@ class EKFAdaptive:
             self._adapt_lambda_sigmoid(NIS_combined)
         else:
             self._adapt_lambda(self.nis_ewma)
+        self._apply_state_acc_scale()
         
         R_adaptive = np.eye(3) * self.R_acc
         S = H @ self.P @ H.T + R_adaptive
@@ -399,6 +636,9 @@ class EKFAdaptive:
         
         mag_norm = np.linalg.norm(mag)
         if mag_norm < 1e-6:
+            return
+        self._update_state_adaptation_mag(mag)
+        if self.use_state_adaptation and not self._state_mag_update_allowed:
             return
         
         # ========== VQF 风格磁场异常检测 ==========
@@ -534,7 +774,7 @@ class EKFAdaptive:
         # H_mag_decoupled[:, 3:6] 已经是 0（不更新 Bias）
         
         # 测量噪声协方差（根据信任度调整）
-        R_mag_adaptive = np.eye(3) * self.R_mag / mag_trust
+        R_mag_adaptive = np.eye(3) * self.R_mag * self._state_mag_noise_scale(mag_trust)
         
         # 计算 Kalman 增益
         S_mag = H_mag_decoupled @ self.P @ H_mag_decoupled.T + R_mag_adaptive
@@ -847,7 +1087,7 @@ class EKFAdaptive:
             self._static_counter += 1
             if self._static_counter >= self._static_confirm_count:
                 self._is_static = True
-                if self.use_zaru:
+                if self.use_zaru and self._state_zaru_allowed:
                     lambda_factor = self.zaru_r_scale
         else:
             self._static_counter = 0
@@ -934,6 +1174,12 @@ class EKFAdaptive:
     def get_nis_ewma(self) -> float:
         return self.nis_ewma
 
+    def get_state_prob(self) -> Dict[str, float]:
+        return self.state_prob.as_dict()
+
+    def get_state_command(self) -> Dict[str, Any]:
+        return self.state_command.as_dict()
+
 
 def run_ekf_adaptive(ds: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, Any]:
     acc_raw = ds["meas"]["acc"]
@@ -957,7 +1203,12 @@ def run_ekf_adaptive(ds: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, Any]:
         gyro = gyro_raw
     
     n_samples = len(acc)
-    ekf = EKFAdaptive(cfg)
+    cfg_eff = dict(cfg)
+    if cfg_eff.get("state_classifier", {}).get("enabled", False):
+        state_cfg = dict(cfg_eff.get("state_classifier", {}))
+        state_cfg.setdefault("fs", fs)
+        cfg_eff["state_classifier"] = state_cfg
+    ekf = EKFAdaptive(cfg_eff)
     
     from ..filters.complementary import acc_to_roll_pitch
     roll_init, pitch_init = acc_to_roll_pitch(acc[0:1])
@@ -979,6 +1230,12 @@ def run_ekf_adaptive(ds: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, Any]:
     window_mean_nis = np.zeros(n_samples, dtype=np.float64)
     nis_ewma = np.zeros(n_samples, dtype=np.float64)
     lambda_raw = np.zeros(n_samples, dtype=np.float64)
+    state_static = np.zeros(n_samples, dtype=np.float64)
+    state_low_dynamic = np.zeros(n_samples, dtype=np.float64)
+    state_high_dynamic = np.zeros(n_samples, dtype=np.float64)
+    state_mag_disturbance = np.zeros(n_samples, dtype=np.float64)
+    state_r_acc_scale = np.ones(n_samples, dtype=np.float64)
+    state_r_mag_scale = np.ones(n_samples, dtype=np.float64)
     
     roll, pitch, yaw = ekf.get_attitude()
     roll_est[0] = roll
@@ -990,6 +1247,14 @@ def run_ekf_adaptive(ds: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, Any]:
     R_acc[0] = ekf.get_R_acc()
     P_diag[0] = np.diag(ekf.get_covariance())
     nis_ewma[0] = ekf.get_nis_ewma()
+    state_prob = ekf.get_state_prob()
+    state_cmd = ekf.get_state_command()
+    state_static[0] = state_prob["static"]
+    state_low_dynamic[0] = state_prob["low_dynamic"]
+    state_high_dynamic[0] = state_prob["high_dynamic"]
+    state_mag_disturbance[0] = state_prob["magnetic_disturbance"]
+    state_r_acc_scale[0] = state_cmd["r_acc_scale"]
+    state_r_mag_scale[0] = state_cmd["r_mag_scale"]
     
     for i in range(1, n_samples):
         ekf.predict(gyro[i], dt)
@@ -1014,6 +1279,14 @@ def run_ekf_adaptive(ds: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, Any]:
         stats = ekf.get_window_stats()
         window_mean_nis[i] = stats["mean"]
         lambda_raw[i] = ekf.lambda_raw
+        state_prob = ekf.get_state_prob()
+        state_cmd = ekf.get_state_command()
+        state_static[i] = state_prob["static"]
+        state_low_dynamic[i] = state_prob["low_dynamic"]
+        state_high_dynamic[i] = state_prob["high_dynamic"]
+        state_mag_disturbance[i] = state_prob["magnetic_disturbance"]
+        state_r_acc_scale[i] = state_cmd["r_acc_scale"]
+        state_r_mag_scale[i] = state_cmd["r_mag_scale"]
     
     return {
         "roll": roll_est,
@@ -1032,5 +1305,11 @@ def run_ekf_adaptive(ds: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, Any]:
             "window_mean_nis": window_mean_nis,
             "nis_ewma": nis_ewma,
             "lambda_raw": lambda_raw,
+            "state_static": state_static,
+            "state_low_dynamic": state_low_dynamic,
+            "state_high_dynamic": state_high_dynamic,
+            "state_mag_disturbance": state_mag_disturbance,
+            "state_r_acc_scale": state_r_acc_scale,
+            "state_r_mag_scale": state_r_mag_scale,
         },
     }

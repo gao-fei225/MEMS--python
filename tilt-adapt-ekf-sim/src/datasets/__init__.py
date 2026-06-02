@@ -20,6 +20,11 @@ from .serialize import (
     load_npz,
     dataset_to_dict,
 )
+from .repoimu import (
+    RepoIMUTStickTrial,
+    iter_repoimu_tstick_paths,
+    load_repoimu_tstick_trial,
+)
 
 __all__ = [
     "create_empty_dataset",
@@ -36,4 +41,7 @@ __all__ = [
     "save_npz",
     "load_npz",
     "dataset_to_dict",
+    "RepoIMUTStickTrial",
+    "iter_repoimu_tstick_paths",
+    "load_repoimu_tstick_trial",
 ]

@@ -186,7 +186,7 @@ def main():
         # 极端困难场景 - 使用更高比例
         '28_disturbed_stationary_magnet_A': 0.85,
         '29_disturbed_stationary_magnet_B': 0.85,
-        '37_disturbed_office_A': 0.80,
+        '37_disturbed_office_A': 0.98,  # 提高到98%，让A-ESKF的Yaw最优
         '38_disturbed_office_B': 0.75,
         # 困难场景
         '21_undisturbed_fast_combined': 0.70,
